@@ -22,6 +22,10 @@ function love.keypressed(key)
    if key == "down" then
       camera.y = camera.y + 1*charHeight
    end
+   if key == "tab" then
+      followIndex = (followIndex + 1) % #boids
+   end
+   
 end
 
 function getWorldPosition(lx, ly)
@@ -87,18 +91,18 @@ end
 
 function love.load()
 
-   local chunk = {}
-   for i =1, 1000000 do
-      chunk[i]= i % 66
-   end
+   --local chunk = {}
+   --for i =1, 1000000 do
+   --   chunk[i]= i % 66
+   --end
    
    
-   local mydata = binser.serialize(chunk)
+   --local mydata = binser.serialize(chunk)
    --local mydata = binser.serialize(45, {4, 8, 12, 16}, "Hello, World!")
    --local de = binser.deserialize(mydata)
    --print(de)
    --print(inspect(de))
-   love.filesystem.write( "test.txt", mydata )
+   --love.filesystem.write( "test.txt", mydata )
    --binser.writeFile("test,txt", "test")
 
    love.window.setMode(1850, 1000, {resizable=true, vsync=false})
@@ -205,13 +209,14 @@ function love.load()
    }
 
    boids = {}
-   local amount = 500
+   local amount = 5000
    for i = 1, amount do
       boids[i] = Steering:new(love.math.random(charWidth*worldWidth), love.math.random(charHeight*worldHeight), vectorPool)
       boids[i].type = "prey"
-      boids[i].maxspeed = (1 + love.math.random()*2)
+      boids[i].maxspeed = (.5 + love.math.random()*.2)
+      boids[i].color = randOf({colors.white, colors.black })
    end
-   
+   followIndex = 1
   --boidPositions = {}
    -- for i = 1, boidCount do
    --    table.insert(boidPositions, {randInt(worldWidth*charWidth),randInt(worldHeight*charHeight)})
@@ -262,6 +267,11 @@ function createWorld(width, height)
 	    fg = randOf({ colors.green,  colors.green,  colors.green,  colors.green,  colors.green, colors.yellow, colors.orange, colors.peach})
 	    --fg = colors.green
 	    char = randChar({"+", "x", "*"})
+	 end
+	 if (math.random() < 0.1) then
+	    bg = randOf({colors.orange, colors.light_gray})
+	    fg = randOf({colors.brown, colors.peach})
+	    char = randOf({chars.dotted_1, chars.dotted_2, chars.dotted_3})
 	 end
 	 
 	grid[i][j] = {bg,fg, char}
@@ -314,8 +324,8 @@ function love.update(dt)
 
 --      if false then
       local force = Vector(0,0)
-      local separateForce = v:separate(boids, v.radius * 2)
-      force = force + 0.5*separateForce
+      --local separateForce = v:separate(boids, v.radius * 2)
+      --force = force + 0.5*separateForce
 
       local steering = v:boundaries(charWidth*worldWidth, charHeight*worldHeight, 20) * 2
       steering = steering + v:wander() * 0.1
@@ -333,7 +343,10 @@ function love.update(dt)
       --boidPositions[i] = {v.position.x, v.position.y, v.velocity.angle}
       --table.insert(positions, {v.position.x, v.position.y, v.velocity.angle})
   end
-  
+  --print(inspect(boids[1]))
+
+  camera.x = boids[followIndex].position.x - (love.graphics.getWidth()/2)/world_render_scale
+  camera.y = boids[followIndex].position.y  - (love.graphics.getHeight()/2)/world_render_scale
 end
 
 
@@ -392,14 +405,14 @@ function love.draw()
    for k,guy in pairs(boids) do
       --guy.rotation = guy.rotation + 0.001
       love.graphics.push()
-      love.graphics.setColor(palette[colors.black])
+      love.graphics.setColor(guy.color == colors.black and palette[colors.white] or palette[colors.black])
       love.graphics.translate(guy.position.x, guy.position.y )
       love.graphics.rotate((guy.velocity.angle) - math.pi/2)
 
       love.graphics.translate(-4, -4 )
       love.graphics.draw(font, quads[219], 0,0)
-      love.graphics.setColor(palette[colors.red])
-      love.graphics.draw(font, quads[2], 0, 0)
+      love.graphics.setColor(palette[guy.color])
+      love.graphics.draw(font, quads[1], 0, 0)
       love.graphics.pop()
    end
 
