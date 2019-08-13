@@ -1,6 +1,10 @@
 inspect = require "vendor.inspect"
 Vector = require "vendor.brinevector"
-require "vehicle"
+Pool = require "pool"
+binser = require "vendor.binser"
+ 
+
+require "vehicle_pooled"
 
 function love.keypressed(key)
    if key == "escape" then
@@ -19,8 +23,25 @@ function love.keypressed(key)
       camera.y = camera.y + 1*charHeight
    end
 end
+
+function getWorldPosition(lx, ly)
+   print(inspect(camera), world_render_scale )
+end
+
+
 function love.wheelmoved(x,y)
-   world_render_scale =  world_render_scale * ((y>0) and 1.1 or 1.0/1.1)
+
+   local posx, posy = love.mouse.getPosition()
+   local wx = camera.x + ( posx / world_render_scale)
+   local wy = camera.y + ( posy / world_render_scale)
+  
+   world_render_scale =  world_render_scale * ((y>0) and 1.1 or 0.9)
+
+   local wx2 = camera.x + ( posx / world_render_scale)
+   local wy2 = camera.y + ( posy / world_render_scale)
+
+   camera.x = camera.x + (wx-wx2)
+   camera.y = camera.y + (wy-wy2)
 end
 function love.mousepressed(x,y)
    camera.dragging = true
@@ -49,8 +70,38 @@ function love.mousemoved(x,y,dx,dy)
    end
 end
 
+
+-- function newVector(x,y)
+--    print("taken a vector")
+--    local result = vectorPool:pop()
+--    assert(result)
+--    result.x = x
+--    result.y =y
+   
+--    return result
+-- end
+-- function releaseVector(v)
+--    vectorPool:push(v)
+-- end
+
+
 function love.load()
-   love.window.setMode(1024, 1024, {resizable=true, vsync=false})
+
+   local chunk = {}
+   for i =1, 1000000 do
+      chunk[i]= i % 66
+   end
+   
+   
+   local mydata = binser.serialize(chunk)
+   --local mydata = binser.serialize(45, {4, 8, 12, 16}, "Hello, World!")
+   --local de = binser.deserialize(mydata)
+   --print(de)
+   --print(inspect(de))
+   love.filesystem.write( "test.txt", mydata )
+   --binser.writeFile("test,txt", "test")
+
+   love.window.setMode(1850, 1000, {resizable=true, vsync=false})
    love.keyboard.setKeyRepeat( true )
    palette={
       {0,  0,  0,  255}, 
@@ -127,48 +178,51 @@ function love.load()
    charWidth = 8
    charHeight = 8
    quads = createQuadsFromFont(font, charWidth, charHeight)
-   worldWidth = 320
-   worldHeight = 320
+   worldWidth = 1024/4
+   worldHeight = 1024/4
    
    world = createWorld(worldWidth, worldHeight)
+   
    world_render_scale = 4
 
    camera = {x=0, y=0, dragging=false}
 
    
    guys = {
-      {x=100, y=100, rotation=math.pi/3},
-      {x=140, y=100, rotation=-math.pi/3}
+      --{x=100, y=100, rotation=math.pi/3},
+      --{x=140, y=100, rotation=-math.pi/3}
    }
-   boids = {}
-   --for i = 1, 1200 do
-      --boids[i] = Steering:new(love.math.random(w), love.math.random(h))
-      --boids[i].type = "prey"
-      --boids[1].maxspeed = 10
-      --boids[1].maxforce = 1
-   --end
-
-   thread = love.thread.newThread( 'boids-thread.lua' )
-   local boidCount = 200
-   thread:start(charWidth, charHeight, worldWidth, worldHeight, boidCount)
-   channel 	= {};
-   channel.boids2Main	= love.thread.getChannel ( "boids2Main" ); 
-   channel.main2Boids	= love.thread.getChannel ( "main2Boids" );
+  
+   --local boidCount = 5000
+   --thread = love.thread.newThread( 'boids-thread.lua' )
+   
+   --thread:start(charWidth, charHeight, worldWidth, worldHeight, boidCount)
+   --channel 	= {};
+   --channel.boids2Main	= love.thread.getChannel ( "boids2Main" ); 
+   --channel.main2Boids	= love.thread.getChannel ( "main2Boids" );
    
    cars = {
    }
 
-  boidPositions = {}
+   boids = {}
+   local amount = 500
+   for i = 1, amount do
+      boids[i] = Steering:new(love.math.random(charWidth*worldWidth), love.math.random(charHeight*worldHeight), vectorPool)
+      boids[i].type = "prey"
+      boids[i].maxspeed = (1 + love.math.random()*2)
+   end
+   
+  --boidPositions = {}
    -- for i = 1, boidCount do
    --    table.insert(boidPositions, {randInt(worldWidth*charWidth),randInt(worldHeight*charHeight)})
    -- end
    
-   -- for i = 0, 100 do
-   --    table.insert(cars, {x = randInt(worldWidth*charWidth),
-   -- 			  y=randInt(worldHeight*charHeight),
-   -- 			  rotation = love.math.random() * math.pi *2 ,
-   -- 			  color=colors.yellow, lightColor=colors.orange})
-   -- end
+   for i = 0, 100 do
+      table.insert(cars, {x = randInt(worldWidth*charWidth),
+   			  y=randInt(worldHeight*charHeight),
+   			  rotation = love.math.random() * math.pi *2 ,
+   			  color=colors.yellow, lightColor=colors.orange})
+   end
    
    
 end
@@ -250,18 +304,40 @@ function drawTextpx(str, x, y, px, py)
 end
 
 function love.update(dt)
+   
+  for i= 1, #boids do
+      local v=  boids[i]
+      --local x = math.floor(v.position.x / cellsize) + 1
+      --local y = math.floor(v.position.y/cellsize) + 1
+      --local testAgainst = bins[math.max(1, math.min(x, w))][math.max(math.min(y, h),1)]
+      --print("will check aginats", #testAgainst)
+
+--      if false then
+      local force = Vector(0,0)
+      local separateForce = v:separate(boids, v.radius * 2)
+      force = force + 0.5*separateForce
+
+      local steering = v:boundaries(charWidth*worldWidth, charHeight*worldHeight, 20) * 2
+      steering = steering + v:wander() * 0.1
+      -- steering = steering + v:followPath(path)
+      --steering = steering + v:separate(boids, v.radius * 2) * 0.5
+      force = steering
+      --steering = steering + v:evade(boids[1]) * 0.3
+      if force.length > v.maxforce then
+   	 force.length = v.maxforce
+      end
+      v:applyForce(force )
+ --     end
+      --releaseVector(force)
+      v:update(dt)
+      --boidPositions[i] = {v.position.x, v.position.y, v.velocity.angle}
+      --table.insert(positions, {v.position.x, v.position.y, v.velocity.angle})
+  end
   
 end
 
 
 function love.draw()
-    local v = channel.boids2Main:pop();
-    if (v) then
-       
-      if v[1] == 'update-positions' then
-	 boidPositions = v[2]
-      end
-   end
    -- world rendering
    -- this whole thing is more or less inverted....
    -- insetad i should probably start from the camera, get the tiles and draw them
@@ -283,48 +359,42 @@ function love.draw()
 	    local tile = world[tx][ty]
 	    local xoffset = camera.x % charWidth
 	    local yoffset = camera.y % charHeight
-	    
-	    --if (tile[3] > 0 ) then
 	    love.graphics.setColor(palette[tile[1]])
 	    love.graphics.draw(font, quads[219], -xoffset + (x-1)*charWidth,-yoffset +  (y-1)*charHeight)
 	    love.graphics.setColor(palette[tile[2]])
 	    love.graphics.draw(font, quads[tile[3]],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
-	    --end
 	    count = count+1
-	 --else
-	 --   print("not rendering something")
 	 end
-	 
-	 --end
       end
    end
+
    love.graphics.pop()
 
    -- -- draw guys in thi world
    love.graphics.push()
    love.graphics.scale(world_render_scale ,world_render_scale )
    love.graphics.translate(-camera.x ,-camera.y )
-   for k,guy in pairs(guys) do
-      guy.rotation = guy.rotation + 0.001
-      love.graphics.push()
-      love.graphics.setColor(palette[colors.black])
-      love.graphics.translate(guy.x, guy.y )
-      love.graphics.rotate(guy.rotation)
+   -- for k,guy in pairs(guys) do
+   --    guy.rotation = guy.rotation + 0.001
+   --    love.graphics.push()
+   --    love.graphics.setColor(palette[colors.black])
+   --    love.graphics.translate(guy.x, guy.y )
+   --    love.graphics.rotate(guy.rotation)
 
-      love.graphics.translate(-4, -4 )
-      love.graphics.draw(font, quads[219], 0,0)
-      love.graphics.setColor(palette[colors.red])
-      love.graphics.draw(font, quads[2], 0, 0)
-      love.graphics.pop()
-   end
+   --    love.graphics.translate(-4, -4 )
+   --    love.graphics.draw(font, quads[219], 0,0)
+   --    love.graphics.setColor(palette[colors.red])
+   --    love.graphics.draw(font, quads[2], 0, 0)
+   --    love.graphics.pop()
+   -- end
 
-   for k,guy in pairs(boidPositions) do
+   
+   for k,guy in pairs(boids) do
       --guy.rotation = guy.rotation + 0.001
       love.graphics.push()
       love.graphics.setColor(palette[colors.black])
-      love.graphics.translate(guy[1], guy[2] )
-      --print(guy[3])
-      love.graphics.rotate((guy[3] or 0) - math.pi/2)
+      love.graphics.translate(guy.position.x, guy.position.y )
+      love.graphics.rotate((guy.velocity.angle) - math.pi/2)
 
       love.graphics.translate(-4, -4 )
       love.graphics.draw(font, quads[219], 0,0)
@@ -332,10 +402,12 @@ function love.draw()
       love.graphics.draw(font, quads[2], 0, 0)
       love.graphics.pop()
    end
+
    -- draw boids
 
 
    --draw some cars
+   if false then
    for k,guy in pairs(cars) do
       guy.rotation = guy.rotation + 0.01
       love.graphics.push()
@@ -385,7 +457,7 @@ function love.draw()
       
       love.graphics.pop()
    end
-   
+   end
    love.graphics.pop()	      
 
 

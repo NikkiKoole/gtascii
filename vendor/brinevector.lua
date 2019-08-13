@@ -29,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 local ffi
 local VECTORTYPE = "cdata"
 
-if jit and jit.status() then
+if false and jit and jit.status() then
   ffi = require "ffi"
   ffi.cdef[[
   typedef struct {
