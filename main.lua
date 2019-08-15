@@ -2,7 +2,7 @@ inspect = require "vendor.inspect"
 Vector = require "vendor.brinevector"
 Pool = require "pool"
 binser = require "vendor.binser"
- 
+
 
 require "vehicle_pooled"
 
@@ -32,13 +32,20 @@ function getWorldPosition(lx, ly)
    print(inspect(camera), world_render_scale )
 end
 
+function distance(x1,y1,x2,y2)
+   local dx = x1 - x2
+   local dy = y1 - y2
+   return math.sqrt((dx*dx) + (dy*dy) )
+
+end
+
 
 function love.wheelmoved(x,y)
 
    local posx, posy = love.mouse.getPosition()
    local wx = camera.x + ( posx / world_render_scale)
    local wy = camera.y + ( posy / world_render_scale)
-  
+   
    world_render_scale =  world_render_scale * ((y>0) and 1.1 or 0.9)
 
    local wx2 = camera.x + ( posx / world_render_scale)
@@ -49,17 +56,26 @@ function love.wheelmoved(x,y)
 end
 function love.mousepressed(x,y)
    camera.dragging = true
-  
+   
    -- hittest
-   local tx = (camera.x*world_render_scale ) + x
-   local tx2 = math.floor(tx / (charWidth*world_render_scale)) + 1
+   local tx = (camera.x * world_render_scale ) + x
+   local tx2 = math.floor(tx / (charWidth * world_render_scale)) + 1
+   
    local ty = (camera.y*world_render_scale ) + y
    local ty2 = math.floor(ty / (charHeight*world_render_scale))+ 1
-   print(tx2, ty2)
+   
+   for i = 1, #boids do
+      local b = boids[i]
+      local d = distance(tx/world_render_scale,ty/world_render_scale, b.position.x, b.position.y)
+
+      if (d < 4 ) then
+	 boids[i].color = randOf({colors.red, colors.yellow })
+      end
+   end
+   
    if (tx2> 0 and tx2 <= worldWidth) then
       if (ty2> 0 and ty2 <= worldHeight) then
-	 
-	 world[tx2][ty2][3] = randInt2(34,56)
+	 --	 world[tx2][ty2][3] = randInt2(34,56)
       end
    end
    
@@ -74,19 +90,6 @@ function love.mousemoved(x,y,dx,dy)
    end
 end
 
-
--- function newVector(x,y)
---    print("taken a vector")
---    local result = vectorPool:pop()
---    assert(result)
---    result.x = x
---    result.y =y
-   
---    return result
--- end
--- function releaseVector(v)
---    vectorPool:push(v)
--- end
 
 
 function love.load()
@@ -182,75 +185,61 @@ function love.load()
    charWidth = 8
    charHeight = 8
    quads = createQuadsFromFont(font, charWidth, charHeight)
-   worldWidth = 1024/4
-   worldHeight = 1024/4
    
+   worldWidth = 1024/32
+   worldHeight = 1024/32
    world = createWorld(worldWidth, worldHeight)
-   
    world_render_scale = 4
 
    camera = {x=0, y=0, dragging=false}
 
-   
-   guys = {
-      --{x=100, y=100, rotation=math.pi/3},
-      --{x=140, y=100, rotation=-math.pi/3}
-   }
-  
-   --local boidCount = 5000
-   --thread = love.thread.newThread( 'boids-thread.lua' )
-   
-   --thread:start(charWidth, charHeight, worldWidth, worldHeight, boidCount)
-   --channel 	= {};
-   --channel.boids2Main	= love.thread.getChannel ( "boids2Main" ); 
-   --channel.main2Boids	= love.thread.getChannel ( "main2Boids" );
-   
-   cars = {
-   }
-
+   time_modifier = 1-- 1/16 --/16
    boids = {}
-   local amount = 5000
+   local amount = 100
    for i = 1, amount do
       boids[i] = Steering:new(love.math.random(charWidth*worldWidth), love.math.random(charHeight*worldHeight), vectorPool)
       boids[i].type = "prey"
       boids[i].maxspeed = (.5 + love.math.random()*.2)
       boids[i].color = randOf({colors.white, colors.black })
    end
-   followIndex = 1
-  --boidPositions = {}
-   -- for i = 1, boidCount do
-   --    table.insert(boidPositions, {randInt(worldWidth*charWidth),randInt(worldHeight*charHeight)})
-   -- end
+
+   --followIndex = 1
    
+   cars = {}
    for i = 0, 100 do
-      table.insert(cars, {x = randInt(worldWidth*charWidth),
-   			  y=randInt(worldHeight*charHeight),
-   			  rotation = love.math.random() * math.pi *2 ,
-   			  color=colors.yellow, lightColor=colors.orange})
+      table.insert(
+	 cars,
+	 {
+	    x = randInt(worldWidth*charWidth),
+	    y = randInt(worldHeight*charHeight),
+	    rotation = love.math.random() * math.pi *2 ,
+	    color = colors.yellow,
+	    lightColor = colors.orange
+	 }
+      )
    end
-   
-   
 end
 
 function randInt(max)
    return math.floor((love.math.random() * max))+1
 end
+
 function randInt2(min, max)
    return min + math.floor(love.math.random() * (max-min))+1
 end
+
 function randOf(collection)
    local index = math.floor(love.math.random() * #collection)+1
    return collection[index]
 end
+
 function randChar(collection)
    return charCode(randOf(collection))
 end
+
 function charCode(char)
    return string.byte(char,1)
 end
-
-
-
 
 function createWorld(width, height)
    local grid = {}
@@ -274,7 +263,7 @@ function createWorld(width, height)
 	    char = randOf({chars.dotted_1, chars.dotted_2, chars.dotted_3})
 	 end
 	 
-	grid[i][j] = {bg,fg, char}
+	 grid[i][j] = {bg,fg, char}
       end
    end
 
@@ -289,14 +278,12 @@ function createQuadsFromFont(font, charWidth, charHeight)
    local fontHeight = font:getHeight()
    for y=0, 15 do
       for x=0, 15  do
-	 local i = (y*16)+x
+	 local i = (y * 16) + x
 	 result[i] = love.graphics.newQuad(x*charWidth, y*charHeight, charWidth, charHeight,  fontWidth, fontHeight)
       end
    end
-   return result;
+   return result
 end
-
-
 
 function drawText(str, x, y)
    for i=1, string.len(str) do
@@ -305,6 +292,7 @@ function drawText(str, x, y)
       love.graphics.draw(font, quads[char_code], ((x+i-1)*charWidth), (y*charHeight))
    end
 end
+
 function drawTextpx(str, x, y, px, py)
    for i=1, string.len(str) do
       local char = string.sub(str, i , i)
@@ -314,39 +302,39 @@ function drawTextpx(str, x, y, px, py)
 end
 
 function love.update(dt)
-   
-  for i= 1, #boids do
+   for i= 1, #boids do
       local v=  boids[i]
       --local x = math.floor(v.position.x / cellsize) + 1
       --local y = math.floor(v.position.y/cellsize) + 1
       --local testAgainst = bins[math.max(1, math.min(x, w))][math.max(math.min(y, h),1)]
       --print("will check aginats", #testAgainst)
-
---      if false then
+      --      if false then
       local force = Vector(0,0)
       --local separateForce = v:separate(boids, v.radius * 2)
       --force = force + 0.5*separateForce
 
       local steering = v:boundaries(charWidth*worldWidth, charHeight*worldHeight, 20) * 2
-      steering = steering + v:wander() * 0.1
+      steering = steering + v:wander() * 0.5
       -- steering = steering + v:followPath(path)
-      --steering = steering + v:separate(boids, v.radius * 2) * 0.5
+      steering = steering + v:separate(boids, v.radius * 2) * 0.5
+      steering = steering + v:evade(boids[1]) * 0.3
+
       force = steering
-      --steering = steering + v:evade(boids[1]) * 0.3
       if force.length > v.maxforce then
    	 force.length = v.maxforce
       end
-      v:applyForce(force )
- --     end
+      v:applyForce(force)
+      --     end
       --releaseVector(force)
-      v:update(dt)
+      v:update(dt * time_modifier)
       --boidPositions[i] = {v.position.x, v.position.y, v.velocity.angle}
       --table.insert(positions, {v.position.x, v.position.y, v.velocity.angle})
-  end
-  --print(inspect(boids[1]))
-
-  camera.x = boids[followIndex].position.x - (love.graphics.getWidth()/2)/world_render_scale
-  camera.y = boids[followIndex].position.y  - (love.graphics.getHeight()/2)/world_render_scale
+   end
+   --print(inspect(boids[1]))
+   if (followIndex) then
+      camera.x = boids[followIndex].position.x - (love.graphics.getWidth()/2)/world_render_scale
+      camera.y = boids[followIndex].position.y  - (love.graphics.getHeight()/2)/world_render_scale
+   end
 end
 
 
@@ -387,27 +375,13 @@ function love.draw()
    love.graphics.push()
    love.graphics.scale(world_render_scale ,world_render_scale )
    love.graphics.translate(-camera.x ,-camera.y )
-   -- for k,guy in pairs(guys) do
-   --    guy.rotation = guy.rotation + 0.001
-   --    love.graphics.push()
-   --    love.graphics.setColor(palette[colors.black])
-   --    love.graphics.translate(guy.x, guy.y )
-   --    love.graphics.rotate(guy.rotation)
-
-   --    love.graphics.translate(-4, -4 )
-   --    love.graphics.draw(font, quads[219], 0,0)
-   --    love.graphics.setColor(palette[colors.red])
-   --    love.graphics.draw(font, quads[2], 0, 0)
-   --    love.graphics.pop()
-   -- end
-
    
    for k,guy in pairs(boids) do
       --guy.rotation = guy.rotation + 0.001
       love.graphics.push()
       love.graphics.setColor(guy.color == colors.black and palette[colors.white] or palette[colors.black])
       love.graphics.translate(guy.position.x, guy.position.y )
-      love.graphics.rotate((guy.velocity.angle) - math.pi/2)
+      --love.graphics.rotate((guy.velocity.angle) - math.pi/2)
 
       love.graphics.translate(-4, -4 )
       love.graphics.draw(font, quads[219], 0,0)
@@ -421,55 +395,55 @@ function love.draw()
 
    --draw some cars
    if false then
-   for k,guy in pairs(cars) do
-      guy.rotation = guy.rotation + 0.01
-      love.graphics.push()
-      
-      love.graphics.translate(guy.x, guy.y )
-      love.graphics.rotate(guy.rotation)
+      for k,guy in pairs(cars) do
+	 guy.rotation = guy.rotation + 0.01
+	 love.graphics.push()
+	 
+	 love.graphics.translate(guy.x, guy.y )
+	 love.graphics.rotate(guy.rotation)
 
-      love.graphics.translate(-(4*8)/2, -(6*8)/2 )
-      love.graphics.setColor(palette[guy.color])
-      for x=0, 3 do
-	 for y = 0, 6 do
-	    love.graphics.draw(font, quads[219], x*8,y*8)
+	 love.graphics.translate(-(4*8)/2, -(6*8)/2 )
+	 love.graphics.setColor(palette[guy.color])
+	 for x=0, 3 do
+	    for y = 0, 6 do
+	       love.graphics.draw(font, quads[219], x*8,y*8)
+	    end
 	 end
+	 
+	 love.graphics.setColor(palette[guy.lightColor] or palette[colors.white])
+	 
+	 -- love.graphics.draw(font, quads[chars.dotted_2], 0, 0)
+	 -- love.graphics.draw(font, quads[chars.dotted_2], 8, 0)
+	 -- love.graphics.draw(font, quads[chars.dotted_2], 16, 0)
+	 -- love.graphics.draw(font, quads[chars.dotted_2], 24, 0)
+	 
+	 love.graphics.draw(font, quads[chars.double_up_left_corner], 0, 8)
+	 love.graphics.draw(font, quads[chars.double_horizontal], 8, 8)
+	 love.graphics.draw(font, quads[chars.double_horizontal], 16, 8)
+	 love.graphics.draw(font, quads[chars.double_up_right_corner], 24, 8)
+
+	 love.graphics.draw(font, quads[chars.single_vertical], 0, 16)
+	 love.graphics.draw(font, quads[chars.block], 8, 16)
+	 love.graphics.draw(font, quads[chars.block], 16, 16)
+	 love.graphics.draw(font, quads[chars.single_vertical], 24, 16)
+	 
+	 love.graphics.draw(font, quads[chars.double_vertical], 0, 24)
+	 love.graphics.draw(font, quads[chars.block], 8,24)
+	 love.graphics.draw(font, quads[chars.block], 16, 24)
+	 love.graphics.draw(font, quads[chars.double_vertical], 24, 24)
+
+	 love.graphics.draw(font, quads[chars.single_vertical], 0, 32)
+	 love.graphics.draw(font, quads[chars.block], 8,32)
+	 love.graphics.draw(font, quads[chars.block], 16, 32)
+	 love.graphics.draw(font, quads[chars.single_vertical], 24, 32)
+
+	 love.graphics.draw(font, quads[chars.double_low_left_corner], 0, 40)
+	 love.graphics.draw(font, quads[chars.double_horizontal], 8, 40)
+	 love.graphics.draw(font, quads[chars.double_horizontal], 16, 40)
+	 love.graphics.draw(font, quads[chars.double_low_right_corner], 24, 40)
+	 
+	 love.graphics.pop()
       end
-      
-      love.graphics.setColor(palette[guy.lightColor] or palette[colors.white])
-    
-      -- love.graphics.draw(font, quads[chars.dotted_2], 0, 0)
-      -- love.graphics.draw(font, quads[chars.dotted_2], 8, 0)
-      -- love.graphics.draw(font, quads[chars.dotted_2], 16, 0)
-      -- love.graphics.draw(font, quads[chars.dotted_2], 24, 0)
-      
-      love.graphics.draw(font, quads[chars.double_up_left_corner], 0, 8)
-      love.graphics.draw(font, quads[chars.double_horizontal], 8, 8)
-      love.graphics.draw(font, quads[chars.double_horizontal], 16, 8)
-      love.graphics.draw(font, quads[chars.double_up_right_corner], 24, 8)
-
-      love.graphics.draw(font, quads[chars.single_vertical], 0, 16)
-      love.graphics.draw(font, quads[chars.block], 8, 16)
-      love.graphics.draw(font, quads[chars.block], 16, 16)
-      love.graphics.draw(font, quads[chars.single_vertical], 24, 16)
-      
-      love.graphics.draw(font, quads[chars.double_vertical], 0, 24)
-      love.graphics.draw(font, quads[chars.block], 8,24)
-      love.graphics.draw(font, quads[chars.block], 16, 24)
-      love.graphics.draw(font, quads[chars.double_vertical], 24, 24)
-
-      love.graphics.draw(font, quads[chars.single_vertical], 0, 32)
-      love.graphics.draw(font, quads[chars.block], 8,32)
-      love.graphics.draw(font, quads[chars.block], 16, 32)
-      love.graphics.draw(font, quads[chars.single_vertical], 24, 32)
-
-      love.graphics.draw(font, quads[chars.double_low_left_corner], 0, 40)
-      love.graphics.draw(font, quads[chars.double_horizontal], 8, 40)
-      love.graphics.draw(font, quads[chars.double_horizontal], 16, 40)
-      love.graphics.draw(font, quads[chars.double_low_right_corner], 24, 40)
-      
-      love.graphics.pop()
-   end
    end
    love.graphics.pop()	      
 

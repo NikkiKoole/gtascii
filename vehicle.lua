@@ -22,7 +22,7 @@ function Steering:update(dt)
    if self.velocity.length > self.maxspeed then
       self.velocity.length = self.maxspeed
    end
-   self.position = self.position + (self.velocity * dt * 32)
+   self.position = self.position + (self.velocity * dt )
    self.acceleration = self.acceleration * 0
 end
 
