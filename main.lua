@@ -10,6 +10,11 @@ function love.keypressed(key)
    if key == "escape" then
       love.event.quit()
    end
+   if key == "space" then
+      perlin:load(  )
+       world = createWorld(worldWidth, worldHeight)
+   end
+   
    if key == "left" then
       camera.x = camera.x - 1*charWidth
    end
@@ -25,11 +30,19 @@ function love.keypressed(key)
    if key == "tab" then
       followIndex = (followIndex + 1) % #boids
    end
+   if key == "e" then
+      isMapEditing = not isMapEditing
+      startDrawRectX = -1
+      startDrawRectY = -1
+      endDrawRectX = -1
+      endDrawRectY = -1
+   end
+   
    
 end
 
 function getWorldPosition(lx, ly)
-   print(inspect(camera), world_render_scale )
+--   print(inspect(camera), world_render_scale )
 end
 
 function distance(x1,y1,x2,y2)
@@ -54,40 +67,228 @@ function love.wheelmoved(x,y)
    camera.x = camera.x + (wx-wx2)
    camera.y = camera.y + (wy-wy2)
 end
+
+
+
 function love.mousepressed(x,y)
    camera.dragging = true
-   
-   -- hittest
+    -- hittest
    local tx = (camera.x * world_render_scale ) + x
    local tx2 = math.floor(tx / (charWidth * world_render_scale)) + 1
-   
    local ty = (camera.y*world_render_scale ) + y
    local ty2 = math.floor(ty / (charHeight*world_render_scale))+ 1
-   
-   for i = 1, #boids do
-      local b = boids[i]
-      local d = distance(tx/world_render_scale,ty/world_render_scale, b.position.x, b.position.y)
+   if (not isMapEditing) then
+      for i = 1, #boids do
+	 local b = boids[i]
+	 local d = distance(tx/world_render_scale,ty/world_render_scale, b.position.x, b.position.y)
+	 if (d < 4 ) then
+	    boids[i].color = randOf({colors.red, colors.yellow })
+	 end
+      end
+      
+      if (tx2> 0 and tx2 <= worldWidth) then
+	 if (ty2> 0 and ty2 <= worldHeight) then
+	    --	 world[tx2][ty2][3] = randInt2(34,56)
+	 end
+      end
+   else
+      startDrawRectX = tx2
+      startDrawRectY = ty2
+      endDrawRectX = tx2
+      endDrawRectY = ty2
 
-      if (d < 4 ) then
-	 boids[i].color = randOf({colors.red, colors.yellow })
+      --print ('init some wild stuff', startDrawRectX, startDrawRectY)
+   end
+end
+
+
+function neighbourTileValue(x,y, dx, dy)
+   return world[x+dx][y+dy]
+end
+function valueIsSingleLine(value)
+   local singles = {179, 196,180,195,193,194, 197, 218, 191, 217, 192}
+    for i = 1, #singles do
+      if singles[i] == value then
+   	 return true
       end
+   end
+    return false
+end
+function valueIsDoubleLine(value)
+   local doubles = {186,205,185,204,202,203,206,201,187,188,200}
+   for i = 1, #doubles do
+      if doubles[i] == value then
+   	 return true
+      end
+   end
+   return false
+end
+
+function beSmartAboutTile(x,y)
+   --print(x,y)
+   if x <= 0 or y <= 0 then return end
+   if x > worldWidth or y > worldHeight then return end
+   if (not valueIsSingleLine(world[x][y][3])) then return end
+   
+   local score = 0
+   if (y > 1) then
+      if valueIsSingleLine(world[x][y-1][3]) then
+	 score = score + 8
+      end
+   end
+   if (y < worldHeight) then
+      if valueIsSingleLine(world[x][y+1][3]) then
+	 score = score + 4
+      end
+   end
+
+   if x > 1 then
+      if valueIsSingleLine(world[x-1][y][3]) then
+	 score = score + 2
+      end
+   end
+   if x < worldWidth then
+      if valueIsSingleLine(world[x+1][y][3]) then
+	 score = score + 1
+      end
+   end
+
+
+   if score == 1 then -- x + 1
+      world[x][y][3] = chars.single_horizontal
+   end
+   if score == 2 then -- x - 1
+      world[x][y][3] = chars.single_horizontal
+   end
+   if score == 1 + 2 then
+      world[x][y][3] = chars.single_horizontal
+   end
+   if score == 4 then -- y + 1
+      world[x][y][3] = chars.single_vertical
+   end
+   if score == 4 + 1 then 
+      world[x][y][3] = chars.single_up_left_corner
+   end
+   if score == 4 + 2 then 
+      world[x][y][3] = chars.single_up_right_corner
+   end
+   if score == 4 + 1 + 2 then 
+      world[x][y][3] = chars.single_horizontal_and_down
+   end
+   if score == 8 then -- y - 1
+      world[x][y][3] = chars.single_vertical
+   end
+   if score == 8 + 1 then 
+      world[x][y][3] = chars.single_low_left_corner
+   end
+   if score == 8 + 2 then 
+      world[x][y][3] = chars.single_low_right_corner
+   end
+   if score == 8 + 1+ 2 then 
+      world[x][y][3] = chars.single_horizontal_and_up
+   end
+   if score == 4 + 8 then
+      world[x][y][3] = chars.single_vertical
+   end
+   if score == 4 + 8 + 1 then
+      world[x][y][3] = chars.single_vertical_and_right
+   end
+   if score == 4 + 8 + 2 then
+      world[x][y][3] = chars.single_vertical_and_left
+   end
+   if score == 1 + 2 + 4 + 8 then
+      world[x][y][3] = chars.single_horizontal_and_vertical
+   end
+
+   if score > 0 then
+      world[x][y][1] = colors.black
+   end
+
+   -- patching some stuff
+    if (world[x][y][3] == chars.single_vertical_and_left and world[x-1][y][3] == chars.single_vertical_and_right ) then
+      world[x][y][3] = chars.single_vertical
+      world[x-1][y][3] = chars.single_vertical
+   end
+   if (world[x][y][3] == chars.single_horizontal_and_up and world[x][y-1][3] == chars.single_horizontal_and_down ) then
+      world[x][y][3] = chars.single_horizontal
+      world[x][y-1][3] = chars.single_horizontal
    end
    
-   if (tx2> 0 and tx2 <= worldWidth) then
-      if (ty2> 0 and ty2 <= worldHeight) then
-	 --	 world[tx2][ty2][3] = randInt2(34,56)
-      end
-   end
+   
+   
    
 end
+
+
+
 function love.mousereleased(x,y)
    camera.dragging = false
+   if isMapEditing then
+      local tx = (camera.x * world_render_scale ) + x
+      local tx2 = math.floor(tx / (charWidth * world_render_scale)) + 1
+      local ty = (camera.y*world_render_scale ) + y
+      local ty2 = math.floor(ty / (charHeight*world_render_scale))+ 1
+      --print ('end doing some wild stuff, aka comit the stuff into the world baby')
+
+      local minX = math.min(startDrawRectX, endDrawRectX)
+      local minY = math.min(startDrawRectY, endDrawRectY)
+      local maxX = math.max(startDrawRectX, endDrawRectX)
+      local maxY = math.max(startDrawRectY, endDrawRectY)
+      if (minX>0 and maxX>0 and minY>0 and maxY>0 and maxY <= worldHeight and maxX <= worldWidth) then
+      for i = minX, maxX do
+	 world[i][minY][2] = colors.dark_gray
+	 world[i][maxY][2] = colors.dark_gray
+	 world[i][minY][3] = chars.single_horizontal
+	 world[i][maxY][3] = chars.single_horizontal
+      end
+      for i = minY, maxY do
+	 world[minX][i][2] = colors.dark_gray
+	 world[maxX][i][2] = colors.dark_gray
+	 world[minX][i][3] = chars.single_horizontal
+	 world[maxX][i][3] = chars.single_horizontal
+      end
+      end
+      
+      -- now i want to check their neighbours and make them more fitting
+      for i = minX, maxX do
+	 beSmartAboutTile(i, minY)
+	 beSmartAboutTile(i, maxY)
+      end
+      for i = minY, maxY do
+	 beSmartAboutTile(minX, i)
+	 beSmartAboutTile(maxX, i)
+      end
+      
+      for x = 1, worldWidth do
+	 for y = 1, worldHeight do
+	    beSmartAboutTile(x,y)
+	 end
+      end
+      
+      
+      startDrawRectX = -1
+      startDrawRectY = -1
+      endDrawRectX = -1
+      endDrawRectY = -1
+   end
+   
 end
 function love.mousemoved(x,y,dx,dy)
-   if (camera.dragging) then
+   if (not isMapEditing and camera.dragging) then
       camera.x = camera.x - dx/world_render_scale
       camera.y = camera.y - dy/world_render_scale
    end
+   if isMapEditing  and camera.dragging  then
+      local tx = (camera.x * world_render_scale ) + x
+      local tx2 = math.floor(tx / (charWidth * world_render_scale)) + 1
+      local ty = (camera.y*world_render_scale ) + y
+      local ty2 = math.floor(ty / (charHeight*world_render_scale))+ 1
+      --print ('doing some wild stuff', tx2, ty2)
+      endDrawRectX = tx2
+      endDrawRectY = ty2
+
+   end
+   
 end
 
 
@@ -186,9 +387,20 @@ function love.load()
    charHeight = 8
    quads = createQuadsFromFont(font, charWidth, charHeight)
    
-   worldWidth = 1024/32
-   worldHeight = 1024/32
+   worldWidth = 1024/4
+   worldHeight = 1024/4
+   perlin:load()
    world = createWorld(worldWidth, worldHeight)
+   --for i=1,worldWidth do
+        --for j=1,worlHeight do
+	  
+	   --print(x)
+	--end
+   --end
+   
+  
+   
+   --world = createWorld(worldWidth, worldHeight)
    world_render_scale = 4
 
    camera = {x=0, y=0, dragging=false}
@@ -218,6 +430,12 @@ function love.load()
 	 }
       )
    end
+
+   isMapEditing = false
+   startDrawRectX = -1
+   startDrawRectY = -1
+   endDrawRectX = -1
+   endDrawRectY = -1
 end
 
 function randInt(max)
@@ -241,7 +459,186 @@ function charCode(char)
    return string.byte(char,1)
 end
 
-function createWorld(width, height)
+---
+-- original code by Ken Perlin: http://mrl.nyu.edu/~perlin/noise/
+local function BitAND(a,b)--Bitwise and
+    local p,c=1,0
+    while a>0 and b>0 do
+        local ra,rb=a%2,b%2
+        if ra+rb>1 then c=c+p end
+        a,b,p=(a-ra)/2,(b-rb)/2,p*2
+    end
+    return c
+end
+
+perlin = {}
+perlin.p = {}
+perlin.permutation = { 151,160,137,91,90,15,
+  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+}
+perlin.size = 256
+perlin.gx = {}
+perlin.gy = {}
+perlin.randMax = 256
+
+function perlin:load(  )
+    for i=1,self.size do
+       self.p[i] = math.floor(love.math.random() * 256) --self.permutation[i]
+        self.p[255+i] = self.p[i]
+    end
+end
+
+function perlin:noise( x, y, z )
+    local X = BitAND(math.floor(x), 255) + 1
+    local Y = BitAND(math.floor(y), 255) + 1
+    local Z = BitAND(math.floor(z), 255) + 1
+
+    x = x - math.floor(x)
+    y = y - math.floor(y)
+    z = z - math.floor(z)
+    local u = fade(x)
+    local v = fade(y)
+    local w = fade(z)
+    local A  = self.p[X]+Y
+    local AA = self.p[A]+Z
+    local AB = self.p[A+1]+Z
+    local B  = self.p[X+1]+Y
+    local BA = self.p[B]+Z
+    local BB = self.p[B+1]+Z
+
+    return lerp(w, lerp(v, lerp(u, grad(self.p[AA  ], x  , y  , z  ),
+                                   grad(self.p[BA  ], x-1, y  , z  )),
+                           lerp(u, grad(self.p[AB  ], x  , y-1, z  ),
+                                   grad(self.p[BB  ], x-1, y-1, z  ))),
+                   lerp(v, lerp(u, grad(self.p[AA+1], x  , y  , z-1),
+                                   grad(self.p[BA+1], x-1, y  , z-1)),
+                           lerp(u, grad(self.p[AB+1], x  , y-1, z-1),
+                                   grad(self.p[BB+1], x-1, y-1, z-1))))
+end
+
+
+function fade( t )
+    return t * t * t * (t * (t * 6 - 15) + 10)
+end
+
+function lerp( t, a, b )
+    return a + t * (b - a)
+end
+
+function grad( hash, x, y, z )
+    local h = BitAND(hash, 15)
+    local u = h < 8 and x or y
+    local v = h < 4 and y or ((h == 12 or h == 14) and x or z)
+    return ((h and 1) == 0 and u or -u) + ((h and 2) == 0 and v or -v)
+end
+
+---
+ function createWorld(width, height)
+      local grid = {}
+      for i = 1, width do
+	 grid[i] = {}
+	 for j = 1, height do
+	    local bg = (i==1 or i==width or j==1 or j==height ) and colors.yellow or colors.black
+	    local fg = colors.dark_green
+	    local char = 0 -- randChar({".", " ", " ", " ", ","})
+	    local x1 = perlin:noise(i/100, j/100, 0)
+	    local x2 = perlin:noise(i/10, j/10, 0)
+	    local x3 = perlin:noise(i/30, j/30, 0)
+	    local x = 0.6*x1 + 0.3*x3 +  0.1*x2
+
+	    
+	    --colors = {
+     -- black=1,  dark_blue=2,  dark_purple=3, dark_green= 4,
+     -- brown= 5, dark_gray= 6, light_gray=7,  white=8,
+      --red= 9,   orange=10,    yellow=11,     green=12, 
+      --blue=13,  indigo=14,    pink= 15,      peach=16,
+	    --}
+	    x = x + 0.1
+	    
+	    if x < -0.4 then
+	       bg = colors.black
+	    elseif x < -0.2 then
+	       bg = colors.dark_blue
+	    elseif x < -0.0 then
+	       bg = colors.blue
+	    elseif x < 0.01 then
+	       bg = colors.yellow
+	    elseif x < 0.05 then
+	       bg = colors.orange
+	    elseif x < 0.1 then
+	       bg = colors.pink
+	    elseif x < 0.2 then
+	       bg = colors.green
+	    elseif x < 0.3 then
+	       bg = colors.dark_green
+	    elseif x < 0.4 then
+	       bg = colors.brown
+	    elseif x < 0.45 then
+	       bg = colors.dark_gray
+	    elseif x < 0.8 then
+	       bg = colors.light_gray
+	    end
+
+	    if x>= -0.01 and x<= 0 then
+	       char = randOf( {256-9, charCode("~")}) --randChar({" ", "~"})
+	       fg = randOf({colors.white, colors.dark_blue})
+	    elseif x < 0.01 then
+	       char = randOf( {256-9, charCode("~"), 0,0,0,0,0,0,0,0,0,0,0}) --randChar({" ", "~"})
+	       fg = randOf({colors.white, colors.dark_blue})
+	    end
+
+	    if (x>= 0) then
+	       local cityrandom = math.random()
+	       if (x< 0.05) then
+	       if (cityrandom > 0.01 and cityrandom < 0.02) then
+		  bg = colors.red
+		  fg = colors.white
+		  char = charCode("^")
+	       end
+	       elseif(x < 0.2) then
+		  if (cityrandom > 0.01 and cityrandom < 0.011) then
+		  bg = colors.red
+		  fg = colors.white
+		  char = charCode("^")
+	       end
+
+	       end
+	       
+	    end
+		    
+	    
+	    -- if (math.random() < 0.005) then
+	    --    -- we make a flower, you hippie
+	    --    fg = randOf({ colors.green,  colors.green,  colors.green,  colors.green,  colors.green, colors.yellow, colors.orange, colors.peach})
+	    --    --fg = colors.green
+	    --    char = randChar({"+", "x", "*"})
+	    -- end
+	    -- if (math.random() < 0.6) then
+	    --    bg = randOf({colors.orange, colors.light_gray})
+	    --    fg = randOf({colors.brown, colors.peach})
+	    --    char = randOf({chars.dotted_1, chars.dotted_2, chars.dotted_3})
+	    -- end
+	    
+	    grid[i][j] = {bg,fg, char}
+	 end
+      end
+
+   return grid
+end
+
+
+function createWorldOld(width, height)
    local grid = {}
    for i = 1, width do
       grid[i] = {}
@@ -257,7 +654,7 @@ function createWorld(width, height)
 	    --fg = colors.green
 	    char = randChar({"+", "x", "*"})
 	 end
-	 if (math.random() < 0.1) then
+	 if (math.random() < 0.6) then
 	    bg = randOf({colors.orange, colors.light_gray})
 	    fg = randOf({colors.brown, colors.peach})
 	    char = randOf({chars.dotted_1, chars.dotted_2, chars.dotted_3})
@@ -349,6 +746,12 @@ function love.draw()
    local endX =  2 + math.floor(love.graphics.getWidth() / (charWidth* world_render_scale))
    local endY = 2 + math.floor(love.graphics.getHeight() / (charHeight* world_render_scale))
    local count = 0;
+
+   
+   
+
+
+
    
    for x = 1, endX do
       for y = 1,endY  do
@@ -358,12 +761,36 @@ function love.draw()
 	    local tx = math.min(worldWidth, math.max(xb, 1))
 	    local ty = math.min(worldHeight,math.max(yb, 1))
 	    local tile = world[tx][ty]
+	    --print(tx, ty)
 	    local xoffset = camera.x % charWidth
 	    local yoffset = camera.y % charHeight
 	    love.graphics.setColor(palette[tile[1]])
 	    love.graphics.draw(font, quads[219], -xoffset + (x-1)*charWidth,-yoffset +  (y-1)*charHeight)
+	    
 	    love.graphics.setColor(palette[tile[2]])
 	    love.graphics.draw(font, quads[tile[3]],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
+	    
+	    if isMapEditing and startDrawRectX >= 0 and startDrawRectY >= 0 and endDrawRectX >= 0 and endDrawRectY >= 0 then
+	       if ty == startDrawRectY or ty == endDrawRectY then
+		  local minX = math.min(startDrawRectX, endDrawRectX)
+		  local maxX = math.max(startDrawRectX, endDrawRectX)
+
+	    	  if tx >= minX and tx <= minX + (maxX - minX) then
+	    	     love.graphics.setColor(palette[colors.pink])
+	    	     love.graphics.draw(font, quads[4],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
+		     love.graphics.setColor(palette[tile[2]])
+	    	  end
+	       end
+	       if tx == startDrawRectX or tx == endDrawRectX then
+		  local minY = math.min(startDrawRectY, endDrawRectY)
+		  local maxY = math.max(startDrawRectY, endDrawRectY)
+	    	  if ty >= minY and ty <= minY + (maxY - minY) then
+	    	     love.graphics.setColor(palette[colors.pink])
+	    	     love.graphics.draw(font, quads[4],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
+		     love.graphics.setColor(palette[tile[2]])
+	    	  end
+	       end
+	   end
 	    count = count+1
 	 end
       end
@@ -457,6 +884,14 @@ function love.draw()
    drawText(fps.." "..count,1, 1)
    love.graphics.setColor(palette[colors.white])
    drawTextpx(fps.." "..count,1, 1,-1,-1)
+   if isMapEditing ==  true then
+      love.graphics.setColor(palette[colors.black])
+      drawText("EDIT",1, 2)
+      love.graphics.setColor(palette[colors.white])
+      drawTextpx("EDIT",1, 2,-1,-1)
+      
+   end
+   
    love.graphics.pop()
 
 end
