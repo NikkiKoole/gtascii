@@ -31,6 +31,7 @@ function love.keypressed(key)
       camera.y = camera.y + 1*charHeight
    end
    if key == "tab" then
+      
       followIndex = (followIndex + 1) % #boids
    end
    if key == "e" then
@@ -259,7 +260,7 @@ function love.load()
       boids[i].maxspeed = (.5 + love.math.random()*.2)
       boids[i].color = randOf({colors.white, colors.black })
    end
-   
+   followIndex = 0
    cars = {}
    for i = 0, 100 do
       table.insert(
@@ -298,7 +299,7 @@ function love.update(dt)
       --force = force + 0.5*separateForce
 
       local steering = v:boundaries(charWidth*worldWidth, charHeight*worldHeight, 20) * 2
-      steering = steering + v:wander() * 0.5
+      steering = steering + v:wander() * 0.2
       -- steering = steering + v:followPath(path)
       steering = steering + v:separate(boids, v.radius * 2) * 0.5
       steering = steering + v:evade(boids[1]) * 0.3
@@ -315,7 +316,7 @@ function love.update(dt)
       --table.insert(positions, {v.position.x, v.position.y, v.velocity.angle})
    end
    --print(inspect(boids[1]))
-   if (followIndex) then
+   if (followIndex > 0) then
       camera.x = boids[followIndex].position.x - (love.graphics.getWidth()/2)/world_render_scale
       camera.y = boids[followIndex].position.y  - (love.graphics.getHeight()/2)/world_render_scale
    end
@@ -383,11 +384,6 @@ function love.draw()
 	    	  love.graphics.draw(font, quads[charCode('^')],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
 	       end
 	    end
-
-	    
-	    
-	    
-	    
 	    
 	    if isMapEditing and startDrawRectX >= 0 and startDrawRectY >= 0 and endDrawRectX >= 0 and endDrawRectY >= 0 then
 	       if ty == startDrawRectY or ty == endDrawRectY then
@@ -427,7 +423,7 @@ function love.draw()
       love.graphics.push()
       love.graphics.setColor(guy.color == colors.black and palette[colors.white] or palette[colors.black])
       love.graphics.translate(guy.position.x, guy.position.y )
-      --love.graphics.rotate((guy.velocity.angle) - math.pi/2)
+      love.graphics.rotate((guy.velocity.angle) - math.pi/2)
 
       love.graphics.translate(-4, -4 )
       love.graphics.draw(font, quads[219], 0,0)
