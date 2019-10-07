@@ -13,6 +13,7 @@ function love.keypressed(key)
       love.event.quit()
    end
    if key == "space" then
+      love.math.setRandomSeed(100)
       perlin:load(  )
       world, cities, water_waves = createWorld(worldWidth, worldHeight)
       connectCities()
@@ -159,6 +160,7 @@ function love.mousemoved(x,y,dx,dy)
 end
 
 function love.load()
+   love.math.setRandomSeed(100)
    love.window.setMode(1850, 1000, {resizable=true, vsync=false})
    love.keyboard.setKeyRepeat( true )
    palette={
@@ -499,6 +501,11 @@ function love.draw()
    drawText(fps.." "..count,1, 1)
    love.graphics.setColor(palette[colors.white])
    drawTextpx(fps.." "..count,1, 1,-1,-1)
+   love.graphics.setColor(palette[colors.black])
+   drawText(world_render_scale,1, 2)
+   love.graphics.setColor(palette[colors.white])
+   drawTextpx(world_render_scale,1, 2,-1,-1)
+
    if isMapEditing ==  true then
       love.graphics.setColor(palette[colors.black])
       drawText("EDIT",1, 2)

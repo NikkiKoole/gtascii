@@ -22,16 +22,16 @@ function connectCities()
 	 local city2 = cities[cj]
 	 local goal = {x=city2.x, y=city2.y}
 	 if (ci ~= cj and distance(start.x, start.y, goal.x, goal.y) < 30 ) then
-	    
+
 	    local los = bresenham.los(start.x,start.y,goal.x,goal.y, positionIsOpenFunc)
 	    if (los) then
 	       bresenham.los(
 		  start.x,start.y,goal.x,goal.y,positionIsOpenFuncRender
-		  
+
 	       )
 	    end
 	 end
-	 
+
       end
    end
 
@@ -42,10 +42,10 @@ function connectCities()
 	 --if (score  == 1) then world[i][j][1] = colors.yellow end
 	 --if (score  == 2) then world[i][j][1] = colors.orange end
 	 if (score  == 3) then world[i][j][1] = colors.red end
-	 if (score  == 4) then world[i][j][1] = colors.dark_purple end 
+	 if (score  == 4) then world[i][j][1] = colors.dark_purple end
       end
    end
-   
+
 
 end
 
@@ -53,19 +53,26 @@ function createWorld(width, height)
    local grid = {}
    local cities = {}
    local water_waves = {}
+   local scale = 1.0/4
+
    for i = 1, width do
       grid[i] = {}
       for j = 1, height do
 	 local bg = (i==1 or i==width or j==1 or j==height ) and colors.yellow or colors.black
 	 local fg = colors.dark_green
 	 local char = 0 -- randChar({".", " ", " ", " ", ","})
-	 local x1 = perlin:noise(i/100, j/100, 0)
-	 local x2 = perlin:noise(i/10, j/10, 0)
-	 local x3 = perlin:noise(i/30, j/30, 0)
+
+	 local offsetX = 0
+	 local offsetY = 0
+	 local x1 = perlin:noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, 0)
+	 local x2 = perlin:noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 0)
+	 local x3 = perlin:noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 0)
+
+
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
 
-	 x = x + 0.1 -- raise the world level 
-	 
+	 x = x + 0.1 -- raise the world level
+
 	 if x < -0.0 then
 	    bg = colors.blue
 	 elseif x < 0.01 then
@@ -92,7 +99,7 @@ function createWorld(width, height)
 	    if (char ~= 0) then
 	        table.insert( water_waves, {x=i, y=j})
 	    end
-	    
+
 	 elseif x < 0.01 then
 	    char = randOf( {chars.double_tilde, chars.single_tilde, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) --randChar({" ", "~"})
 	    fg = randOf({colors.white, colors.dark_blue})
@@ -125,7 +132,7 @@ function createWorld(width, height)
 	 end
       end
    end
-   
+
    -- position in a grid and then offsetting
    local rndOffset = function(offset)
       return math.floor(math.random() * (offset*2) - offset)
@@ -157,7 +164,7 @@ function createWorld(width, height)
 
        end
    end
-   
-   
+
+   cities = {}
    return grid, cities, water_waves
 end
