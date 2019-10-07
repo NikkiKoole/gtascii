@@ -20,14 +20,17 @@ function charCode(char)
    return string.byte(char,1)
 end
 
-function createQuadsFromFont(font, charWidth, charHeight)
+function createQuadsFromFont(font, charWidth, charHeight, usePadding)
    local result = {}
    local fontWidth = font:getWidth()
    local fontHeight = font:getHeight()
+
    for y=0, 15 do
       for x=0, 15  do
 	 local i = (y * 16) + x
-	 result[i] = love.graphics.newQuad((x+1) + x*(charWidth),(y+1)+  y*(charHeight), charWidth, charHeight,  fontWidth, fontHeight)
+	 local padx = usePadding and (x+1) or 0
+	 local pady = usePadding and (y+1) or 0
+	 result[i] = love.graphics.newQuad(padx + x*(charWidth),pady +  y*(charHeight), charWidth, charHeight,  fontWidth, fontHeight)
       end
    end
    return result

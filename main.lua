@@ -236,11 +236,11 @@ function love.load()
 
    }
 
-   font = love.graphics.newImage("resources/8x8_padded.png")
+   font = love.graphics.newImage("resources/8x8.png")
    font:setFilter('nearest', 'nearest')
    charWidth = 8
    charHeight = 8
-   quads = createQuadsFromFont(font, charWidth, charHeight)
+   quads = createQuadsFromFont(font, charWidth, charHeight, false)
 
    worldWidth = 1024/4
    worldHeight = 1024/4
