@@ -17,7 +17,7 @@ function love.keypressed(key)
       world, cities, water_waves = createWorld(worldWidth, worldHeight)
       connectCities()
    end
-   
+
    if key == "left" then
       camera.x = camera.x - 1*charWidth
    end
@@ -31,7 +31,7 @@ function love.keypressed(key)
       camera.y = camera.y + 1*charHeight
    end
    if key == "tab" then
-      
+
       followIndex = (followIndex + 1) % #boids
    end
    if key == "e" then
@@ -47,7 +47,7 @@ function love.wheelmoved(x,y)
    local posx, posy = love.mouse.getPosition()
    local wx = camera.x + ( posx / world_render_scale)
    local wy = camera.y + ( posy / world_render_scale)
-   
+
    world_render_scale =  world_render_scale * ((y>0) and 1.1 or 0.9)
 
    local wx2 = camera.x + ( posx / world_render_scale)
@@ -74,7 +74,7 @@ function love.mousepressed(x,y)
 	    boids[i].color = randOf({colors.red, colors.yellow })
 	 end
       end
-      
+
       if (tx2> 0 and tx2 <= worldWidth) then
 	 if (ty2> 0 and ty2 <= worldHeight) then
 	    --	 world[tx2][ty2][3] = randInt2(34,56)
@@ -117,7 +117,7 @@ function love.mousereleased(x,y)
 	    world[maxX][i][3] = chars.single_horizontal
 	 end
       end
-      
+
       -- now i want to check their neighbours and make them more fitting
       for i = minX, maxX do
 	 beSmartAboutTile(i, minY)
@@ -127,20 +127,20 @@ function love.mousereleased(x,y)
 	 beSmartAboutTile(minX, i)
 	 beSmartAboutTile(maxX, i)
       end
-      
+
       for x = 1, worldWidth do
 	 for y = 1, worldHeight do
 	    beSmartAboutTile(x,y)
 	 end
       end
-      
-      
+
+
       startDrawRectX = -1
       startDrawRectY = -1
       endDrawRectX = -1
       endDrawRectY = -1
    end
-   
+
 end
 function love.mousemoved(x,y,dx,dy)
    if (not isMapEditing and camera.dragging) then
@@ -162,12 +162,12 @@ function love.load()
    love.window.setMode(1850, 1000, {resizable=true, vsync=false})
    love.keyboard.setKeyRepeat( true )
    palette={
-      {0,  0,  0,  255}, 
-      {29, 43, 83, 255}, 
-      {126,37, 83, 255}, 
-      {0,  135,81, 255}, 
-      {171,82, 54, 255}, 
-      {95, 87, 79, 255}, 
+      {0,  0,  0,  255},
+      {29, 43, 83, 255},
+      {126,37, 83, 255},
+      {0,  135,81, 255},
+      {171,82, 54, 255},
+      {95, 87, 79, 255},
       {194,195,199,255},
       {255,241,232,255},
       {255,0,  77, 255},
@@ -176,8 +176,8 @@ function love.load()
       {0,  231,86, 255},
       {41, 173,255,255},
       {131,118,156,255},
-      {255,119,168,255}, 
-      {255,204,170,255} 
+      {255,119,168,255},
+      {255,204,170,255}
    }
    for i = 1, #palette do
       palette[i] = {
@@ -190,7 +190,7 @@ function love.load()
    colors = {
       black=1,  dark_blue=2,  dark_purple=3, dark_green= 4,
       brown= 5, dark_gray= 6, light_gray=7,  white=8,
-      red= 9,   orange=10,    yellow=11,     green=12, 
+      red= 9,   orange=10,    yellow=11,     green=12,
       blue=13,  indigo=14,    pink= 15,      peach=16,
    }
 
@@ -233,20 +233,20 @@ function love.load()
       single_tilde = 126
 
    }
-   
-   font = love.graphics.newImage("resources/8x8.png")
+
+   font = love.graphics.newImage("resources/8x8_padded.png")
    font:setFilter('nearest', 'nearest')
    charWidth = 8
    charHeight = 8
    quads = createQuadsFromFont(font, charWidth, charHeight)
-   
+
    worldWidth = 1024/4
    worldHeight = 1024/4
-   
+
    perlin:load()
    world, cities, water_waves = createWorld(worldWidth, worldHeight)
    connectCities()
-  
+
    world_render_scale = 4
 
    camera = {x=0, y=0, dragging=false}
@@ -357,7 +357,7 @@ function love.draw()
 	  world[wave.x][wave.y][2] = randOf({colors.white, colors.dark_blue})
       end
    end
-   
+
    for x = 1, endX do
       for y = 1,endY  do
 	 local xb = x+math.floor(camera.x/charWidth)
@@ -384,7 +384,7 @@ function love.draw()
 	    	  love.graphics.draw(font, quads[charCode('^')],-xoffset +  (x-1)*charWidth, -yoffset +  (y-1)*charHeight)
 	       end
 	    end
-	    
+
 	    if isMapEditing and startDrawRectX >= 0 and startDrawRectY >= 0 and endDrawRectX >= 0 and endDrawRectY >= 0 then
 	       if ty == startDrawRectY or ty == endDrawRectY then
 		  local minX = math.min(startDrawRectX, endDrawRectX)
@@ -417,7 +417,7 @@ function love.draw()
    love.graphics.push()
    love.graphics.scale(world_render_scale ,world_render_scale )
    love.graphics.translate(-camera.x ,-camera.y )
-   
+
    for k,guy in pairs(boids) do
       --guy.rotation = guy.rotation + 0.001
       love.graphics.push()
@@ -440,7 +440,7 @@ function love.draw()
       for k,guy in pairs(cars) do
 	 guy.rotation = guy.rotation + 0.01
 	 love.graphics.push()
-	 
+
 	 love.graphics.translate(guy.x, guy.y )
 	 love.graphics.rotate(guy.rotation)
 
@@ -451,14 +451,14 @@ function love.draw()
 	       love.graphics.draw(font, quads[219], x*8,y*8)
 	    end
 	 end
-	 
+
 	 love.graphics.setColor(palette[guy.lightColor] or palette[colors.white])
-	 
+
 	 -- love.graphics.draw(font, quads[chars.dotted_2], 0, 0)
 	 -- love.graphics.draw(font, quads[chars.dotted_2], 8, 0)
 	 -- love.graphics.draw(font, quads[chars.dotted_2], 16, 0)
 	 -- love.graphics.draw(font, quads[chars.dotted_2], 24, 0)
-	 
+
 	 love.graphics.draw(font, quads[chars.double_up_left_corner], 0, 8)
 	 love.graphics.draw(font, quads[chars.double_horizontal], 8, 8)
 	 love.graphics.draw(font, quads[chars.double_horizontal], 16, 8)
@@ -468,7 +468,7 @@ function love.draw()
 	 love.graphics.draw(font, quads[chars.block], 8, 16)
 	 love.graphics.draw(font, quads[chars.block], 16, 16)
 	 love.graphics.draw(font, quads[chars.single_vertical], 24, 16)
-	 
+
 	 love.graphics.draw(font, quads[chars.double_vertical], 0, 24)
 	 love.graphics.draw(font, quads[chars.block], 8,24)
 	 love.graphics.draw(font, quads[chars.block], 16, 24)
@@ -483,14 +483,14 @@ function love.draw()
 	 love.graphics.draw(font, quads[chars.double_horizontal], 8, 40)
 	 love.graphics.draw(font, quads[chars.double_horizontal], 16, 40)
 	 love.graphics.draw(font, quads[chars.double_low_right_corner], 24, 40)
-	 
+
 	 love.graphics.pop()
       end
    end
-   love.graphics.pop()	      
+   love.graphics.pop()
 
 
-   
+
    -- ui rendering
    local fps = tostring(love.timer.getFPS( ))
    love.graphics.push()
@@ -504,11 +504,9 @@ function love.draw()
       drawText("EDIT",1, 2)
       love.graphics.setColor(palette[colors.white])
       drawTextpx("EDIT",1, 2,-1,-1)
-      
+
    end
-   
+
    love.graphics.pop()
 
 end
-
-

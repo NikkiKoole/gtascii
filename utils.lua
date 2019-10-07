@@ -27,7 +27,7 @@ function createQuadsFromFont(font, charWidth, charHeight)
    for y=0, 15 do
       for x=0, 15  do
 	 local i = (y * 16) + x
-	 result[i] = love.graphics.newQuad(x*charWidth, y*charHeight, charWidth, charHeight,  fontWidth, fontHeight)
+	 result[i] = love.graphics.newQuad(x*(charWidth+1), y*(charHeight+1), charWidth+1, charHeight+1,  fontWidth, fontHeight)
       end
    end
    return result

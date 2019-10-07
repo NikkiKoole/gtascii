@@ -1,0 +1,1 @@
+convert 8x8.png : -background SkyBlue -crop 8x0 +repage -splice 1x0 +append -crop 0x8 +repage -splice 0x1 -append grid_tile.png
