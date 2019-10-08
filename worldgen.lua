@@ -68,15 +68,15 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	 local x2 = perlin:noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 0)
 	 local x3 = perlin:noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 0)
 	 local x4 = perlin:noise((i + offsetX)/3 * scale, (j+ offsetY)/3 * scale, 0)
-	 local x5 = perlin:noise((i + offsetX)/1 * scale, (j+ offsetY)/1 * scale, 0)
+	 local x5 = perlin:noise((i + offsetX)/.2 * scale, (j+ offsetY)/.2 * scale, 0)
 
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
 	 if (scalein == 8 or scalein == 64) then
 
-	    x = (x + x4/30) -- nice!!
+	    x = (x + x4/40) -- nice!!
 	 end
 	 if (scalein == 64) then
-	    x = (x + x5/240) -- nice!!
+	    x = (x + x5/800) -- nice!!
 	 end
 
 	 x = x + 0.1 -- raise the world level

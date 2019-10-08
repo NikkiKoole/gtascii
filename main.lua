@@ -159,8 +159,6 @@ function love.mousereleased(x,y)
 	 perlin:load()
 	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
 	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
-
-	 --worldCompleteRect = {x=0, y=0}
 	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
    worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
       end
@@ -170,8 +168,6 @@ function love.mousereleased(x,y)
 			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
 	 love.math.setRandomSeed(100)
 	 perlin:load()
-	 --worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
-	 --zoomedCanvas = generateOverViewCanvas(worldZoomed)
 	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
 	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
       end
@@ -208,10 +204,6 @@ function love.mousemoved(x,y,dx,dy)
 	 local cell = worldWidth*charWidth/8
 	 worldViewRect2 = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
-	 --love.math.setRandomSeed(100)
-	 --perlin:load()
-	 --worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
-	 --zoomedCanvas = generateOverViewCanvas(worldZoomed)
       end
       if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
 	 local cell = worldWidth*charWidth/8
@@ -219,9 +211,6 @@ function love.mousemoved(x,y,dx,dy)
 			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
 
       end
-
-
-     -- love.graphics.rectangle("fill", margin, smallSize + (margin*2) , smallSize, smallSize )
    end
 
 
