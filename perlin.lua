@@ -24,7 +24,7 @@ perlin.randMax = 256
 
 function perlin:load(  )
    for i=1,self.size do
-      self.p[i] = math.floor(love.math.random() * 256) --self.permutation[i]
+      self.p[i] = math.floor(love.math.random() * 255) --self.permutation[i]
       self.p[255+i] = self.p[i]
    end
 end
