@@ -142,6 +142,43 @@ function love.mousereleased(x,y)
       endDrawRectY = -1
    end
 
+   -- figure out if i am over one of the two smaller worldviews
+
+   sw, sh = love.graphics.getDimensions( )
+
+   local margin = 20
+   local smallSize = (sh/2)-(margin/2)*3
+   local worldScale = smallSize / (worldWidth *  charWidth)
+
+   if (x > margin and x < margin + smallSize) then
+      if (y > margin and y < margin + smallSize) then
+	 local cell = worldWidth*charWidth/8
+	 worldViewRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
+			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
+	 love.math.setRandomSeed(100)
+	 perlin:load()
+	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
+
+	 --worldCompleteRect = {x=0, y=0}
+	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
+   worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+      end
+      if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
+	 local cell = worldWidth*charWidth/8
+	 worldCompleteRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
+			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
+	 love.math.setRandomSeed(100)
+	 perlin:load()
+	 --worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+	 --zoomedCanvas = generateOverViewCanvas(worldZoomed)
+	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
+	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+      end
+
+   end
+
+
 end
 function love.mousemoved(x,y,dx,dy)
    if (not isMapEditing and camera.dragging) then
@@ -157,6 +194,38 @@ function love.mousemoved(x,y,dx,dy)
       endDrawRectX = tx2
       endDrawRectY = ty2
    end
+
+
+
+   sw, sh = love.graphics.getDimensions( )
+
+   local margin = 20
+   local smallSize = (sh/2)-(margin/2)*3
+   local worldScale = smallSize / (worldWidth *  charWidth)
+
+   if (x > margin and x < margin + smallSize) then
+      if (y > margin and y < margin + smallSize) then
+	 local cell = worldWidth*charWidth/8
+	 worldViewRect2 = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
+			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
+	 --love.math.setRandomSeed(100)
+	 --perlin:load()
+	 --worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+	 --zoomedCanvas = generateOverViewCanvas(worldZoomed)
+      end
+      if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
+	 local cell = worldWidth*charWidth/8
+	 worldCompleteRect2 = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
+			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
+
+      end
+
+
+     -- love.graphics.rectangle("fill", margin, smallSize + (margin*2) , smallSize, smallSize )
+   end
+
+
+
 end
 
 function love.load()
@@ -282,6 +351,19 @@ function love.load()
    startDrawRectY = -1
    endDrawRectX = -1
    endDrawRectY = -1
+
+   worldViewRect = {x=0, y=0}
+   worldViewRect2 = {x=0, y=0}
+   love.math.setRandomSeed(100)
+   perlin:load()
+   worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+   overviewCanvas = generateOverViewCanvas(world)
+   zoomedCanvas = generateOverViewCanvas(worldZoomed)
+
+   worldCompleteRect = {x=0, y=0}
+   worldCompleteRect2 = {x=0, y=0}
+   worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x*8 +  worldCompleteRect.x, worldViewRect.y*8 +  worldCompleteRect.y)
+   worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
 end
 
 
@@ -340,7 +422,106 @@ function drawTextpx(str, x, y, px, py)
    end
 end
 
+
+function generateOverViewCanvas(grid)
+   sw, sh = love.graphics.getDimensions( )
+   local margin = 20
+   local smallSize = (sh/2)-(margin/2)*3
+   local canvas = love.graphics.newCanvas( (worldWidth *  charWidth),  (worldWidth *  charWidth))
+   love.graphics.setCanvas(canvas)
+   love.graphics.push()
+   local worldScale = smallSize / (worldWidth *  charWidth)
+   --love.graphics.scale(worldScale , worldScale )
+   for x = 1, worldWidth do
+      for y = 1, worldHeight do
+	 local tile = grid[x][y]
+	  love.graphics.setColor(palette[tile[1]])
+	  love.graphics.draw(font, quads[219], (x-1)*charWidth, (y-1)*charHeight)
+	  love.graphics.setColor(palette[tile[2]])
+	  love.graphics.draw(font, quads[tile[3]],(x-1)*charWidth, (y-1)*charHeight)
+      end
+   end
+
+   love.graphics.pop()
+   love.graphics.setCanvas()
+   return canvas
+end
+
+
 function love.draw()
+   sw, sh = love.graphics.getDimensions( )
+
+   local margin = 20
+   local smallSize = (sh/2)-(margin/2)*3
+   local bigSize =  sh - (margin*2)
+   local worldScale = smallSize / (worldWidth *  charWidth)
+   local bigScale = bigSize / (worldWidth *  charWidth)
+   love.graphics.clear(palette[colors.dark_blue])
+   love.graphics.setColor(palette[colors.dark_gray])
+   love.graphics.rectangle("fill", margin, margin, smallSize, smallSize )
+   love.graphics.rectangle("fill", margin, smallSize + (margin*2) , smallSize, smallSize )
+   love.graphics.rectangle("fill",  smallSize + (margin*2), margin, bigSize, bigSize )
+
+   love.graphics.setColor(palette[colors.white])
+
+   love.graphics.push()
+   love.graphics.translate( margin, margin )
+   love.graphics.scale(worldScale , worldScale )
+   love.graphics.draw(overviewCanvas)
+
+
+   love.graphics.setColor(palette[colors.white])
+   love.graphics.rectangle("line", worldViewRect.x, worldViewRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
+   love.graphics.rectangle("line", worldViewRect.x + 1, worldViewRect.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+   love.graphics.setColor(palette[colors.dark_gray])
+   love.graphics.rectangle("line", worldViewRect2.x, worldViewRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
+   love.graphics.rectangle("line", worldViewRect2.x + 1, worldViewRect2.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+   love.graphics.setColor(palette[colors.white])
+   love.graphics.pop()
+
+
+   love.graphics.push()
+   love.graphics.translate( margin, smallSize + (margin*2) )
+   love.graphics.scale(worldScale , worldScale )
+   love.graphics.draw(zoomedCanvas)
+
+   love.graphics.setColor(palette[colors.white])
+   love.graphics.rectangle("line", worldCompleteRect.x, worldCompleteRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
+   love.graphics.rectangle("line", worldCompleteRect.x+ 1, worldCompleteRect.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+   love.graphics.setColor(palette[colors.dark_gray])
+   love.graphics.rectangle("line", worldCompleteRect2.x, worldCompleteRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
+   love.graphics.rectangle("line", worldCompleteRect2.x+ 1, worldCompleteRect2.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+    love.graphics.setColor(palette[colors.white])
+   love.graphics.pop()
+
+   love.graphics.push()
+   love.graphics.translate(  smallSize + (margin*2), margin )
+   love.graphics.scale(bigScale , bigScale )
+   love.graphics.draw(worldCompleteCanvas)
+
+   --love.graphics.setColor(palette[colors.white])
+   --love.graphics.rectangle("line", 0, 0, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
+   --love.graphics.rectangle("line", 1, 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+   love.graphics.pop()
+
+
+   -- ui rendering
+   local count = 0
+   local fps = tostring(love.timer.getFPS( ))
+   love.graphics.push()
+   love.graphics.scale(2,2 )
+   love.graphics.setColor(palette[colors.black])
+   drawText(fps.." "..count,0, 0)
+   love.graphics.setColor(palette[colors.white])
+   drawTextpx(fps.." "..count,0, 0,-1,-1)
+   love.graphics.pop()
+end
+
+
+
+
+
+function love.draw2()
    -- world rendering
    -- this whole thing is more or less inverted....
    -- insetad i should probably start from the camera, get the tiles and draw them

@@ -49,11 +49,86 @@ function connectCities()
 
 end
 
+function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
+   local grid = {}
+   --local cities = {}
+   --local water_waves = {}
+   local scale = 1.0 / scalein
+
+   for i = 1, width do
+      grid[i] = {}
+      for j = 1, height do
+	 local bg = (i==1 or i==width or j==1 or j==height ) and colors.yellow or colors.black
+	 local fg = colors.dark_green
+	 local char = 0 -- randChar({".", " ", " ", " ", ","})
+
+	 --local offsetX = 0
+	 --local offsetY = 0
+	 local x1 = perlin:noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, 0)
+	 local x2 = perlin:noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 0)
+	 local x3 = perlin:noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 0)
+	 local x4 = perlin:noise((i + offsetX)/3 * scale, (j+ offsetY)/3 * scale, 0)
+	 local x5 = perlin:noise((i + offsetX)/1 * scale, (j+ offsetY)/1 * scale, 0)
+
+	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
+	 if (scalein == 8 or scalein == 64) then
+
+	    x = (x + x4/30) -- nice!!
+	 end
+	 if (scalein == 64) then
+	    x = (x + x5/240) -- nice!!
+	 end
+
+	 x = x + 0.1 -- raise the world level
+
+	 if x < -0.0 then
+	    bg = colors.blue
+	 elseif x < 0.01 then
+	    bg = colors.yellow
+	 elseif x < 0.05 then
+	    bg = colors.orange
+	 elseif x < 0.1 then
+	    bg = colors.pink
+	 elseif x < 0.2 then
+	    bg = colors.green
+	 elseif x < 0.3 then
+	    bg = colors.dark_green
+	 elseif x < 0.4 then
+	    bg = colors.brown
+	 elseif x < 0.45 then
+	    bg = colors.dark_gray
+	 elseif x < 0.8 then
+	    bg = colors.light_gray
+	 end
+
+	 if x>= -0.01 and x<= 0 then
+	    char = randOf( {chars.double_tilde, chars.single_tilde,  0,0,0,0,0,0}) --randChar({" ", "~"})
+	    fg = randOf({colors.white, colors.dark_blue})
+	    if (char ~= 0) then
+	        table.insert( water_waves, {x=i, y=j})
+	    end
+
+	 elseif x < 0.01 then
+	    char = randOf( {chars.double_tilde, chars.single_tilde, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) --randChar({" ", "~"})
+	    fg = randOf({colors.white, colors.dark_blue})
+	    if (char ~= 0) then
+	       table.insert( water_waves, {x=i, y=j})
+	    end
+
+	 end
+
+	 grid[i][j] = {bg,fg, char, x}
+      end
+   end
+   return grid
+end
+
+
 function createWorld(width, height)
    local grid = {}
    local cities = {}
    local water_waves = {}
-   local scale = 1.0/4
+   local scale = 1.0 --/ (8 * 16)
 
    for i = 1, width do
       grid[i] = {}
@@ -67,9 +142,11 @@ function createWorld(width, height)
 	 local x1 = perlin:noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, 0)
 	 local x2 = perlin:noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 0)
 	 local x3 = perlin:noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 0)
-
+	 local x4 = perlin:noise((i + offsetX)/3 * scale, (j+ offsetY)/3 * scale, 0)
 
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
+	 --x = (x + x4/30) -- nice!!
+
 
 	 x = x + 0.1 -- raise the world level
 
