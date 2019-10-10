@@ -50,6 +50,7 @@ function connectCities()
 end
 
 function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
+   local start = love.timer.getTime()
    local grid = {}
    --local cities = {}
    --local water_waves = {}
@@ -60,23 +61,20 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
       for j = 1, height do
 	 local bg = (i==1 or i==width or j==1 or j==height ) and colors.yellow or colors.black
 	 local fg = colors.dark_green
-	 local char = 0 -- randChar({".", " ", " ", " ", ","})
+	 local char = 0
 
-	 --local offsetX = 0
-	 --local offsetY = 0
 	 local x1 = perlin:noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, 0)
 	 local x2 = perlin:noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 0)
 	 local x3 = perlin:noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 0)
-	 local x4 = perlin:noise((i + offsetX)/3 * scale, (j+ offsetY)/3 * scale, 0)
+	 local x4 = perlin:noise((i + offsetX)/.3 * scale, (j+ offsetY)/.3 * scale, 0)
 	 local x5 = perlin:noise((i + offsetX)/.2 * scale, (j+ offsetY)/.2 * scale, 0)
 
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
-	 if (scalein == 8 or scalein == 64) then
-
-	    x = (x + x4/40) -- nice!!
+	 if (scalein == 16 or scalein == 128) then
+	    x = (x + x4/500) -- nice!!
 	 end
-	 if (scalein == 64) then
-	    x = (x + x5/800) -- nice!!
+	 if (scalein == 128) then
+	    x = (x + x5/2000) -- nice!!
 	 end
 
 	 x = x + 0.1 -- raise the world level
@@ -101,25 +99,28 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	    bg = colors.light_gray
 	 end
 
-	 if x>= -0.01 and x<= 0 then
-	    char = randOf( {chars.double_tilde, chars.single_tilde,  0,0,0,0,0,0}) --randChar({" ", "~"})
-	    fg = randOf({colors.white, colors.dark_blue})
-	    if (char ~= 0) then
-	        table.insert( water_waves, {x=i, y=j})
-	    end
+	 -- if x>= -0.01 and x<= 0 then
+	 --    char = randOf( {chars.double_tilde, chars.single_tilde,  0,0,0,0,0,0}) --randChar({" ", "~"})
+	 --    fg = randOf({colors.white, colors.dark_blue})
+	 --    if (char ~= 0) then
+	 --        table.insert( water_waves, {x=i, y=j})
+	 --    end
 
-	 elseif x < 0.01 then
-	    char = randOf( {chars.double_tilde, chars.single_tilde, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) --randChar({" ", "~"})
-	    fg = randOf({colors.white, colors.dark_blue})
-	    if (char ~= 0) then
-	       table.insert( water_waves, {x=i, y=j})
-	    end
+	 -- elseif x < 0.01 then
+	 --    char = randOf( {chars.double_tilde, chars.single_tilde, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}) --randChar({" ", "~"})
+	 --    fg = randOf({colors.white, colors.dark_blue})
+	 --    if (char ~= 0) then
+	 --       table.insert( water_waves, {x=i, y=j})
+	 --    end
 
-	 end
+	 -- end
 
 	 grid[i][j] = {bg,fg, char, x}
       end
    end
+   local result = love.timer.getTime() - start
+   print( string.format( "It took %.3f milliseconds to create world", result * 1000 ))
+
    return grid
 end
 

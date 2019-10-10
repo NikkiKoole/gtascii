@@ -152,15 +152,15 @@ function love.mousereleased(x,y)
 
    if (x > margin and x < margin + smallSize) then
       if (y > margin and y < margin + smallSize) then
-	 local cell = worldWidth*charWidth/8
+	 local cell = worldWidth*charWidth/16
 	 worldViewRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
 	 love.math.setRandomSeed(100)
 	 perlin:load()
-	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8*2, worldViewRect.x*2, worldViewRect.y*2)
 	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
-	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
-   worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
       end
       if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
 	 local cell = worldWidth*charWidth/8
@@ -168,7 +168,7 @@ function love.mousereleased(x,y)
 			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
 	 love.math.setRandomSeed(100)
 	 perlin:load()
-	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x * 8 + worldCompleteRect.x , worldViewRect.y * 8 + worldCompleteRect.y )
+	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
 	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
       end
 
@@ -201,7 +201,7 @@ function love.mousemoved(x,y,dx,dy)
 
    if (x > margin and x < margin + smallSize) then
       if (y > margin and y < margin + smallSize) then
-	 local cell = worldWidth*charWidth/8
+	 local cell = worldWidth*charWidth/16
 	 worldViewRect2 = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
       end
@@ -304,8 +304,8 @@ function love.load()
    worldHeight = 1024/4
 
    perlin:load()
-   world, cities, water_waves = createWorld(worldWidth, worldHeight)
-   connectCities()
+   world = createZoomedinWorld(worldWidth, worldHeight,1 , 0, 0)
+   --connectCities()
 
    world_render_scale = 4
 
@@ -345,13 +345,13 @@ function love.load()
    worldViewRect2 = {x=0, y=0}
    love.math.setRandomSeed(100)
    perlin:load()
-   worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8, worldViewRect.x, worldViewRect.y)
+   worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8*2, worldViewRect.x, worldViewRect.y)
    overviewCanvas = generateOverViewCanvas(world)
    zoomedCanvas = generateOverViewCanvas(worldZoomed)
 
    worldCompleteRect = {x=0, y=0}
    worldCompleteRect2 = {x=0, y=0}
-   worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8, worldViewRect.x*8 +  worldCompleteRect.x, worldViewRect.y*8 +  worldCompleteRect.y)
+   worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x*8*2 +  worldCompleteRect.x, worldViewRect.y*8*2 +  worldCompleteRect.y)
    worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
 end
 
@@ -436,6 +436,11 @@ function generateOverViewCanvas(grid)
    return canvas
 end
 
+function drawRect(color, x,y, w, h)
+   love.graphics.setColor(color)
+   love.graphics.rectangle("line", x, y, w, h )
+   love.graphics.rectangle("line", x + 1, y + 1, -2 + w,-2+ h )
+end
 
 function love.draw()
    sw, sh = love.graphics.getDimensions( )
@@ -446,25 +451,18 @@ function love.draw()
    local worldScale = smallSize / (worldWidth *  charWidth)
    local bigScale = bigSize / (worldWidth *  charWidth)
    love.graphics.clear(palette[colors.dark_blue])
-   love.graphics.setColor(palette[colors.dark_gray])
-   love.graphics.rectangle("fill", margin, margin, smallSize, smallSize )
-   love.graphics.rectangle("fill", margin, smallSize + (margin*2) , smallSize, smallSize )
-   love.graphics.rectangle("fill",  smallSize + (margin*2), margin, bigSize, bigSize )
-
-   love.graphics.setColor(palette[colors.white])
+   --love.graphics.setColor(palette[colors.dark_gray])
+   --love.graphics.rectangle("fill", margin, margin, smallSize, smallSize )
+   --love.graphics.rectangle("fill", margin, smallSize + (margin*2) , smallSize, smallSize )
+   --love.graphics.rectangle("fill",  smallSize + (margin*2), margin, bigSize, bigSize )
 
    love.graphics.push()
    love.graphics.translate( margin, margin )
    love.graphics.scale(worldScale , worldScale )
-   love.graphics.draw(overviewCanvas)
-
-
    love.graphics.setColor(palette[colors.white])
-   love.graphics.rectangle("line", worldViewRect.x, worldViewRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
-   love.graphics.rectangle("line", worldViewRect.x + 1, worldViewRect.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
-   love.graphics.setColor(palette[colors.dark_gray])
-   love.graphics.rectangle("line", worldViewRect2.x, worldViewRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
-   love.graphics.rectangle("line", worldViewRect2.x + 1, worldViewRect2.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
+   love.graphics.draw(overviewCanvas)
+   drawRect(palette[colors.white], worldViewRect.x, worldViewRect.y, (worldWidth*charWidth)/16, (worldWidth*charWidth)/16)
+   drawRect(palette[colors.dark_gray], worldViewRect2.x, worldViewRect2.y, (worldWidth*charWidth)/16, (worldWidth*charWidth)/16)
    love.graphics.setColor(palette[colors.white])
    love.graphics.pop()
 
@@ -473,26 +471,16 @@ function love.draw()
    love.graphics.translate( margin, smallSize + (margin*2) )
    love.graphics.scale(worldScale , worldScale )
    love.graphics.draw(zoomedCanvas)
-
-   love.graphics.setColor(palette[colors.white])
-   love.graphics.rectangle("line", worldCompleteRect.x, worldCompleteRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
-   love.graphics.rectangle("line", worldCompleteRect.x+ 1, worldCompleteRect.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
-   love.graphics.setColor(palette[colors.dark_gray])
-   love.graphics.rectangle("line", worldCompleteRect2.x, worldCompleteRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
-   love.graphics.rectangle("line", worldCompleteRect2.x+ 1, worldCompleteRect2.y + 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
-    love.graphics.setColor(palette[colors.white])
+   drawRect(palette[colors.white], worldCompleteRect.x, worldCompleteRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8)
+   drawRect(palette[colors.dark_gray], worldCompleteRect2.x, worldCompleteRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8)
    love.graphics.pop()
-
+   print(worldCompleteRect.x, worldCompleteRect.y)
    love.graphics.push()
    love.graphics.translate(  smallSize + (margin*2), margin )
    love.graphics.scale(bigScale , bigScale )
+   love.graphics.setColor(palette[colors.white])
    love.graphics.draw(worldCompleteCanvas)
-
-   --love.graphics.setColor(palette[colors.white])
-   --love.graphics.rectangle("line", 0, 0, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8 )
-   --love.graphics.rectangle("line", 1, 1, -2 + (worldWidth*charWidth)/8,-2+ (worldWidth*charWidth)/8 )
    love.graphics.pop()
-
 
    -- ui rendering
    local count = 0
