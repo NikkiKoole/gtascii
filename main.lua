@@ -9,6 +9,8 @@ require 'asciigrid'
 require 'worldgen'
 
 function love.keypressed(key)
+
+   local scrollstep = 8
    if key == "escape" then
       love.event.quit()
    end
@@ -20,16 +22,30 @@ function love.keypressed(key)
    end
 
    if key == "left" then
-      camera.x = camera.x - 1*charWidth
+      worldCompleteRect.x = worldCompleteRect.x - scrollstep
+      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+      --camera.x = camera.x - 1*charWidth
    end
    if key == "right" then
-      camera.x = camera.x + 1*charWidth
+      worldCompleteRect.x = worldCompleteRect.x + scrollstep
+      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+
+      --camera.x = camera.x + 1*charWidth
    end
    if key == "up" then
-      camera.y = camera.y - 1*charHeight
+      --camera.y = camera.y - 1*charHeight
+      worldCompleteRect.y = worldCompleteRect.y - scrollstep
+      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
    end
    if key == "down" then
-      camera.y = camera.y + 1*charHeight
+      --camera.y = camera.y + 1*charHeight
+      worldCompleteRect.y = worldCompleteRect.y + scrollstep
+      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+
    end
    if key == "tab" then
 
@@ -161,6 +177,7 @@ function love.mousereleased(x,y)
 	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
 	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
 	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+	 print( worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
       end
       if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
 	 local cell = worldWidth*charWidth/8
@@ -170,6 +187,8 @@ function love.mousereleased(x,y)
 	 perlin:load()
 	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
 	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+	 --print( worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+
       end
 
    end
@@ -474,7 +493,7 @@ function love.draw()
    drawRect(palette[colors.white], worldCompleteRect.x, worldCompleteRect.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8)
    drawRect(palette[colors.dark_gray], worldCompleteRect2.x, worldCompleteRect2.y, (worldWidth*charWidth)/8, (worldWidth*charWidth)/8)
    love.graphics.pop()
-   print(worldCompleteRect.x, worldCompleteRect.y)
+
    love.graphics.push()
    love.graphics.translate(  smallSize + (margin*2), margin )
    love.graphics.scale(bigScale , bigScale )
