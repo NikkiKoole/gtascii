@@ -81,18 +81,25 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 
 	 x = x - 0.45
 
+
 	 -- the river creation
-	 local xr = love.math.noise((i + offsetX)/20 * scale, (j+ offsetY)/20 * scale)
+	 local howmany_rivers = 12  -- smaller is more, bigger is less
+	 local xr = love.math.noise((i + offsetX)/howmany_rivers * scale, (j+ offsetY)/howmany_rivers * scale)
+	 local xr2 = love.math.noise((i + offsetX)/howmany_rivers * scale/.340, (j+ offsetY)/howmany_rivers * scale/.340)
+	 --xr2 = 0.3
+	 local river_width = .5 * xr
+
 	 xr = xr * xr
-	 if xr < 0.35 and xr > .30 and x > 0 then
-	    x = -0.5
+	 if xr > xr2  and xr < xr2 + river_width * 0.5 and x > 0 then
+	    x = x - .5
+
 	 end
 
 	 -- coloring the tiles
 	 if x == -0.5 then
 	    bg = colors.blue
 	 elseif x < -0.0 then
-	    bg = colors.dark_blue
+	    bg = colors.blue
 	 elseif x < 0.01 then
 	    bg = colors.yellow
 	 elseif x < 0.05 then
