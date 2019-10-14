@@ -90,12 +90,12 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 
 	 xr = xr * xr
 	 if xr > xr2  and xr < xr2 + river_width * 0.5 and x > 0 then
-	    x = x - .5
+	    --x = x - .5
 	 end
 
-	 howmany_river = 1500
-	 river_width = .4 * xr
-	 local xr3 = love.math.noise((i + offsetX)/howmany_rivers * scale/.340, (j+ offsetY)/howmany_rivers * scale/.340)
+	 howmany_river = 150
+	 river_width = .4 * xr2
+	 local xr3 = love.math.noise((i + offsetX)/howmany_rivers * scale, (j+ offsetY)/howmany_rivers * scale)
 	 if xr > xr3  and xr < xr3 + river_width * 0.5 and x > 0 then
 	    x = x - .5
 	 end
