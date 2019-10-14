@@ -10,12 +10,21 @@ require 'worldgen'
 
 seed = 899
 
+
+function recreateZoomedinWorld()
+    worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+end
+
+
+
 function love.keypressed(key)
 
    local scrollstep = 8
    if key == "escape" then
       love.event.quit()
    end
+   print(key)
    if key == "space" then
       love.math.setRandomSeed(seed)
       perlin:load(  )
@@ -23,33 +32,47 @@ function love.keypressed(key)
       connectCities()
    end
 
-   if key == "left" then
+   if key == "left" or key == "kp4" then
       worldCompleteRect.x = worldCompleteRect.x - scrollstep
-      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
-      --camera.x = camera.x - 1*charWidth
-      print(worldCompleteRect.x, worldViewRect.x)
+      recreateZoomedinWorld()
    end
-   if key == "right" then
+
+   if key == "right"  or key == "kp6" then
       worldCompleteRect.x = worldCompleteRect.x + scrollstep
-      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
-
-      --camera.x = camera.x + 1*charWidth
+      recreateZoomedinWorld()
    end
-   if key == "up" then
-      --camera.y = camera.y - 1*charHeight
+   if key == "up"  or key == "kp8" then
       worldCompleteRect.y = worldCompleteRect.y - scrollstep
-      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
-   end
-   if key == "down" then
-      --camera.y = camera.y + 1*charHeight
-      worldCompleteRect.y = worldCompleteRect.y + scrollstep
-      worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-      worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
+      recreateZoomedinWorld()
 
    end
+   if key == "down" or key == "kp2"  then
+      worldCompleteRect.y = worldCompleteRect.y + scrollstep
+      recreateZoomedinWorld()
+
+   end
+
+   if key == "kp7" then
+      worldCompleteRect.x = worldCompleteRect.x - scrollstep
+      worldCompleteRect.y = worldCompleteRect.y - scrollstep
+      recreateZoomedinWorld()
+   end
+   if key == "kp9" then
+      worldCompleteRect.x = worldCompleteRect.x + scrollstep
+      worldCompleteRect.y = worldCompleteRect.y - scrollstep
+      recreateZoomedinWorld()
+   end
+   if key == "kp3" then
+      worldCompleteRect.x = worldCompleteRect.x + scrollstep
+      worldCompleteRect.y = worldCompleteRect.y + scrollstep
+      recreateZoomedinWorld()
+   end
+   if key == "kp1" then
+      worldCompleteRect.x = worldCompleteRect.x - scrollstep
+      worldCompleteRect.y = worldCompleteRect.y + scrollstep
+      recreateZoomedinWorld()
+   end
+
    if key == "tab" then
 
       followIndex = (followIndex + 1) % #boids

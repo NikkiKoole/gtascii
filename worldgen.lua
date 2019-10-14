@@ -72,10 +72,6 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
 
-
-
-
-
 	 if (scalein == 16 or scalein == 128) then
 	    x = (x + x4/500) -- nice!!
 	 end
@@ -83,18 +79,20 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	    x = (x + x5/2000) -- nice!!
 	 end
 
-	 x = x - 0.45 -- raise the world level
+	 x = x - 0.45
 
-	 local xr = love.math.noise((i + offsetX)/6 * scale, (j+ offsetY)/6 * scale, seed)
+	 -- the river creation
+	 local xr = love.math.noise((i + offsetX)/20 * scale, (j+ offsetY)/20 * scale)
 	 xr = xr * xr
-	 if xr < 0.32 and xr > .3 then
-	    -- river carve
-	    x = -0.1
+	 if xr < 0.35 and xr > .30 and x > 0 then
+	    x = -0.5
 	 end
 
-
-	 if x < -0.0 then
+	 -- coloring the tiles
+	 if x == -0.5 then
 	    bg = colors.blue
+	 elseif x < -0.0 then
+	    bg = colors.dark_blue
 	 elseif x < 0.01 then
 	    bg = colors.yellow
 	 elseif x < 0.05 then
