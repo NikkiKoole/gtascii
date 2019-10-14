@@ -63,13 +63,19 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	 local fg = colors.dark_green
 	 local char = 0
 
-	 local x1 = love.math.noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, 3)
-	 local x2 = love.math.noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, 3)
-	 local x3 = love.math.noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, 3)
-	 local x4 = love.math.noise((i + offsetX)/.3 * scale, (j+ offsetY)/.3 * scale, 3)
-	 local x5 = love.math.noise((i + offsetX)/.2 * scale, (j+ offsetY)/.2 * scale, 3)
+	 local x1 = love.math.noise((i + offsetX)/100  * scale,(j+ offsetY)/100 * scale, seed)
+	 local x2 = love.math.noise((i + offsetX)/10 * scale, (j+ offsetY)/10 * scale, seed)
+	 local x3 = love.math.noise((i + offsetX)/30 * scale, (j+ offsetY)/30 * scale, seed)
+	 local x4 = love.math.noise((i + offsetX)/.3 * scale, (j+ offsetY)/.3 * scale, seed)
+	 local x5 = love.math.noise((i + offsetX)/.2 * scale, (j+ offsetY)/.2 * scale, seed)
+
 
 	 local x = 0.6*x1 + 0.3*x3 +  0.1*x2
+
+
+
+
+
 	 if (scalein == 16 or scalein == 128) then
 	    x = (x + x4/500) -- nice!!
 	 end
@@ -77,7 +83,15 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	    x = (x + x5/2000) -- nice!!
 	 end
 
-	 x = x - 0.4 -- raise the world level
+	 x = x - 0.45 -- raise the world level
+
+	 local xr = love.math.noise((i + offsetX)/6 * scale, (j+ offsetY)/6 * scale, seed)
+	 xr = xr * xr
+	 if xr < 0.32 and xr > .3 then
+	    -- river carve
+	    x = -0.1
+	 end
+
 
 	 if x < -0.0 then
 	    bg = colors.blue

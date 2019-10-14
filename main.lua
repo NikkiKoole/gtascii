@@ -8,6 +8,8 @@ require 'utils'
 require 'asciigrid'
 require 'worldgen'
 
+seed = 899
+
 function love.keypressed(key)
 
    local scrollstep = 8
@@ -15,7 +17,7 @@ function love.keypressed(key)
       love.event.quit()
    end
    if key == "space" then
-      love.math.setRandomSeed(100)
+      love.math.setRandomSeed(seed)
       perlin:load(  )
       world, cities, water_waves = createWorld(worldWidth, worldHeight)
       connectCities()
@@ -26,6 +28,7 @@ function love.keypressed(key)
       worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
       worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
       --camera.x = camera.x - 1*charWidth
+      print(worldCompleteRect.x, worldViewRect.x)
    end
    if key == "right" then
       worldCompleteRect.x = worldCompleteRect.x + scrollstep
@@ -171,7 +174,7 @@ function love.mousereleased(x,y)
 	 local cell = worldWidth*charWidth/16
 	 worldViewRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
-	 love.math.setRandomSeed(100)
+	 love.math.setRandomSeed(seed)
 	 perlin:load()
 	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8*2, worldViewRect.x*2, worldViewRect.y*2)
 	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
@@ -183,7 +186,7 @@ function love.mousereleased(x,y)
 	 local cell = worldWidth*charWidth/8
 	 worldCompleteRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
-	 love.math.setRandomSeed(100)
+	 love.math.setRandomSeed(seed)
 	 perlin:load()
 	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
 	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
@@ -237,7 +240,7 @@ function love.mousemoved(x,y,dx,dy)
 end
 
 function love.load()
-   love.math.setRandomSeed(100)
+   love.math.setRandomSeed(seed)
    love.window.setMode(1850, 1000, {resizable=true, vsync=false})
    love.keyboard.setKeyRepeat( true )
    palette={
@@ -324,8 +327,6 @@ function love.load()
 
    perlin:load()
    world = createZoomedinWorld(worldWidth, worldHeight,1 , 0, 0)
-   --connectCities()
-
    world_render_scale = 4
 
    camera = {x=0, y=0, dragging=false}
@@ -362,7 +363,7 @@ function love.load()
 
    worldViewRect = {x=0, y=0}
    worldViewRect2 = {x=0, y=0}
-   love.math.setRandomSeed(100)
+   love.math.setRandomSeed(seed)
    perlin:load()
    worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8*2, worldViewRect.x, worldViewRect.y)
    overviewCanvas = generateOverViewCanvas(world)
