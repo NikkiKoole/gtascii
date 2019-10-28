@@ -8,7 +8,7 @@ require 'utils'
 require 'asciigrid'
 require 'worldgen'
 
-seed = 899
+seed = 455434
 
 
 function recreateZoomedinWorld()
@@ -197,24 +197,16 @@ function love.mousereleased(x,y)
 	 local cell = worldWidth*charWidth/16
 	 worldViewRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
 			  y = math.floor(((y-margin)/worldScale)/ cell) * cell}
-	 love.math.setRandomSeed(seed)
-	 perlin:load()
 	 worldZoomed = createZoomedinWorld(worldWidth, worldHeight, 8*2, worldViewRect.x*2, worldViewRect.y*2)
 	 zoomedCanvas = generateOverViewCanvas(worldZoomed)
-	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
-	 print( worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
+
+	 recreateZoomedinWorld()
       end
       if (y >  smallSize + (margin*2) and y <  smallSize + (margin*2) + smallSize) then
 	 local cell = worldWidth*charWidth/8
 	 worldCompleteRect = {x = math.floor(((x-margin)/worldScale)/ cell) * cell,
-			       y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
-	 love.math.setRandomSeed(seed)
-	 perlin:load()
-	 worldZoomedComplete =  createZoomedinWorld(worldWidth, worldHeight, 8*8*2, worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-	 worldCompleteCanvas = generateOverViewCanvas(worldZoomedComplete)
-	 --print( worldViewRect.x * 8*2 + worldCompleteRect.x , worldViewRect.y * 8*2 + worldCompleteRect.y )
-
+			      y = math.floor(((y-( smallSize + (margin*2)))/worldScale)/ cell) * cell}
+	 recreateZoomedinWorld()
       end
 
    end
@@ -231,7 +223,6 @@ function love.mousemoved(x,y,dx,dy)
       local tx2 = math.floor(tx / (charWidth * world_render_scale)) + 1
       local ty = (camera.y*world_render_scale ) + y
       local ty2 = math.floor(ty / (charHeight*world_render_scale))+ 1
-      --print ('doing some wild stuff', tx2, ty2)
       endDrawRectX = tx2
       endDrawRectY = ty2
    end
@@ -257,9 +248,6 @@ function love.mousemoved(x,y,dx,dy)
 
       end
    end
-
-
-
 end
 
 function love.load()
@@ -282,7 +270,11 @@ function love.load()
       {41, 173,255,255},
       {131,118,156,255},
       {255,119,168,255},
-      {255,204,170,255}
+      {255,204,170,255},
+      {77,44,32 , 255},
+      {53,87, 251, 255},
+
+
    }
    for i = 1, #palette do
       palette[i] = {
@@ -297,6 +289,8 @@ function love.load()
       brown= 5, dark_gray= 6, light_gray=7,  white=8,
       red= 9,   orange=10,    yellow=11,     green=12,
       blue=13,  indigo=14,    pink= 15,      peach=16,
+      new_brown=17,
+      new_blue=18
    }
 
    chars = {

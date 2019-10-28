@@ -90,29 +90,30 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 
 	 xr = xr * xr
 	 if xr > xr2  and xr < xr2 + river_width * 0.5 and x > 0 then
-	    x = x - .5
+	    x = - .5
 	 end
 
 
-	 howmany_rivers = 20  -- smaller is more, bigger is less
+	 howmany_rivers = 120  -- smaller is more, bigger is less
 	 xr = love.math.noise((i + offsetX)/howmany_rivers * scale, (j+ offsetY)/howmany_rivers * scale)
 	 xr2 = 0.3
-	 river_width = .25 * xr2
+	 river_width = .05 * xr2
 
 	 if xr > xr2  and xr < xr2 + river_width * 0.5 and x > 0 then
-	    x = x - .5
+	    x = - .5
 	 end
 
 
 	 -- Coloring the tiles
 	 if x == -0.5 then
 	    bg = colors.blue
-	 elseif x < -0.0 then
-	    bg = colors.blue
+	 elseif x < 0.0 then
+	    bg = colors.new_blue
 	 elseif x < 0.01 then
 	    bg = colors.yellow
 	 elseif x < 0.05 then
 	    bg = colors.orange
+	    
 	 elseif x < 0.1 then
 	    bg = colors.pink
 	 elseif x < 0.2 then
