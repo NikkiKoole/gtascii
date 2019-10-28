@@ -49,12 +49,41 @@ function connectCities()
 
 end
 
-function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
+function createCitiesForWorld(grid, width, height)
+   local cities = {}
+   for i = 1, width do
+      for j = 1, height do
+	 local x = grid[i][j][4]
+	 if (x>= 0) then
+	    local cityrandom = math.random()
+	    if (x< 0.05) then
+	       if (cityrandom > 0.01 and cityrandom < 0.02) then
+		  table.insert(cities, {x=i, y=j})
+		  grid[i][j][1] = colors.black
+	       end
+	    elseif(x < 0.4) then
+	       if (cityrandom > 0.01 and cityrandom < 0.011) then
+		  table.insert(cities, {x=i, y=j})
+		  grid[i][j][1] = colors.black
+	       end
+	    end
+	 end
+      end
+   end
+   return cities
+end
+
+
+function createZoomedinWorld(width, height, scalein, offsetX, offsetY, cities)
    local start = love.timer.getTime()
    local grid = {}
    --local cities = {}
    --local water_waves = {}
    local scale = 1.0 / scalein
+
+
+
+
 
    for i = 1, width do
       grid[i] = {}
@@ -93,8 +122,8 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	    x = - .5
 	 end
 
+	 howmany_rivers = 20  -- smaller is more, bigger is less
 
-	 howmany_rivers = 120  -- smaller is more, bigger is less
 	 xr = love.math.noise((i + offsetX)/howmany_rivers * scale, (j+ offsetY)/howmany_rivers * scale)
 	 xr2 = 0.3
 	 river_width = .05 * xr2
@@ -102,6 +131,9 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	 if xr > xr2  and xr < xr2 + river_width * 0.5 and x > 0 then
 	    x = - .5
 	 end
+
+
+
 
 
 	 -- Coloring the tiles
@@ -128,6 +160,7 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 	    bg = colors.light_gray
 	 end
 
+
 	 -- if x>= -0.01 and x<= 0 then
 	 --    char = randOf( {chars.double_tilde, chars.single_tilde,  0,0,0,0,0,0}) --randChar({" ", "~"})
 	 --    fg = randOf({colors.white, colors.dark_blue})
@@ -146,7 +179,62 @@ function createZoomedinWorld(width, height, scalein, offsetX, offsetY)
 
 	 grid[i][j] = {bg,fg, char, x}
       end
+
+
+
    end
+
+
+   if (cities and scalein ~= 1) then
+      for k = 1, #cities do
+	 local c = cities[k]
+	 local cx = c.x * scalein
+	 local cy = c.y * scalein
+
+	 if (cx > offsetX  and cx <  offsetX+(width) and
+	      cy > offsetY and cy <  offsetY +(height)) then
+	    local i = cx-offsetX
+	    local j = cy-offsetY
+	    for i = i, i+scalein do
+	       for j = j, j+scalein do
+
+		  grid[i][j][1] = colors.black
+	       end
+	    end
+	 end
+
+      end
+
+      --print(inspect(cities))
+      --print('offsets', offsetX, offsetY)
+      --print((i+offsetX)*scale, (j+offsetY)*scale)
+   end
+
+    -- if (scalein == 1) then
+    --    print('i would like to generate cities in the world view mode')
+    --    for i = 1, width do
+    -- 	  for j = 1, height do
+    -- 	     local x = grid[i][j][4]
+    -- 	     if (x>= 0) then
+    -- 		local cityrandom = math.random()
+    -- 		if (x< 0.05) then
+    -- 		   if (cityrandom > 0.01 and cityrandom < 0.02) then
+    -- 		      --table.insert(cities, {x=i, y=j})
+    -- 		      grid[i][j][1] = colors.black
+    -- 		   end
+    -- 		elseif(x < 0.4) then
+    -- 		   if (cityrandom > 0.01 and cityrandom < 0.011) then
+    -- 		      --table.insert(cities, {x=i, y=j})
+    -- 		      grid[i][j][1] = colors.black
+    -- 		   end
+    -- 		end
+    -- 	     end
+    -- 	  end
+    --    end
+    -- end
+
+
+
    local result = love.timer.getTime() - start
    print( string.format( "It took %.3f milliseconds to create world", result * 1000 ))
 
